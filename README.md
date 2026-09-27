@@ -12,6 +12,16 @@
 > *English:* a self-hosted cost-per-project accounting tool for small installation / construction contractors (fire alarm, CCTV, access control, electrical). Budgets by expense category, expenses with receipt photos, crew work log and wages, cash advances, customer payments, tax as % of contract and forecast profit. Laravel 12 + Filament 4, installable as a PWA. Russian UI.
 
 <!-- screenshots:start -->
+![Главная: «Требует внимания», сводка за месяц и объекты в работе](docs/screenshots/01-dashboard.png)
+
+| Карточка объекта: план/факт и прогноз прибыли | Перерасход по статье сразу виден |
+|---|---|
+| ![Карточка объекта «ЖК «Солнечный»»](docs/screenshots/02-project-solnechny.png) | ![Объект «Школа № 12» с перерасходом по материалам](docs/screenshots/03-project-school-overrun.png) |
+
+<p align="center">
+  <img src="docs/screenshots/04-mobile-new-expense.png" width="300" alt="Новый расход с телефона"><br>
+  <sub>С телефона (PWA): инженер вносит расход прямо на объекте</sub>
+</p>
 <!-- screenshots:end -->
 
 ## Для кого

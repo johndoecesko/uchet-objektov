@@ -40,7 +40,7 @@ class UserResource extends Resource
                 TextInput::make('email')->label('Email (логин)')->email()->required()->unique(ignoreRecord: true),
                 TextInput::make('phone')->label('Телефон')->tel()->maxLength(50),
                 Select::make('role')->label('Роль')->options(UserRole::class)->default(UserRole::Foreman)->required()
-                    ->helperText('Инженер видит объекты и вносит свои расходы и журнал работ; финансы не видит.'),
+                    ->helperText('Прораб / монтажник видит объекты и вносит свои расходы и журнал работ; финансы не видит.'),
                 TextInput::make('password')->label('Пароль')->password()->revealable()
                     ->minLength(8)
                     ->required(fn (string $operation) => $operation === 'create')

@@ -28,7 +28,7 @@ use Illuminate\Support\Carbon;
  * Входы (пароль у всех — demo12345):
  *   admin@demo.local    — администратор
  *   manager@demo.local  — менеджер / бухгалтер
- *   engineer@demo.local — инженер
+ *   foreman@demo.local  — прораб / монтажник
  */
 class DemoSeeder extends Seeder
 {
@@ -51,7 +51,7 @@ class DemoSeeder extends Seeder
         $users = [
             ['admin@demo.local', 'Анна Директорова', UserRole::Admin],
             ['manager@demo.local', 'Марина Счётова', UserRole::Manager],
-            ['engineer@demo.local', 'Игорь Монтажов', UserRole::Foreman],
+            ['foreman@demo.local', 'Игорь Монтажов', UserRole::Foreman],
         ];
         foreach ($users as [$email, $name, $role]) {
             $u[$role->value] = User::updateOrCreate(['email' => $email], [
@@ -59,9 +59,9 @@ class DemoSeeder extends Seeder
             ]);
         }
 
-        $engineer = Employee::create(['name' => 'Игорь Монтажов', 'position' => 'Инженер', 'day_rate' => 4500, 'user_id' => $u['foreman']->id, 'phone' => '+7 900 000-00-01']);
+        $foreman = Employee::create(['name' => 'Игорь Монтажов', 'position' => 'Прораб', 'day_rate' => 4500, 'user_id' => $u['foreman']->id, 'phone' => '+7 900 000-00-01']);
         $workers = [
-            $engineer,
+            $foreman,
             Employee::create(['name' => 'Сергей Кабелев', 'position' => 'Монтажник', 'day_rate' => 3500]),
             Employee::create(['name' => 'Дмитрий Щитов', 'position' => 'Монтажник', 'day_rate' => 3500]),
             Employee::create(['name' => 'Павел Трассов', 'position' => 'Монтажник', 'day_rate' => 3200]),
@@ -83,7 +83,8 @@ class DemoSeeder extends Seeder
             [45, 'Аренда техники и инструмента', 24_000, 'ООО «Вышки64»', 'Аренда вышки-туры, 2 недели'],
             [40, 'Инструмент и расходники', 12_700, 'Строймаркет', 'Крепёж, гофра, стяжки'],
         ]);
-        $this->workLogs($p1, array_slice($workers, 0, 4), 70, 28);
+        // журнал своей бригады ведёт прораб
+        $this->actingAs($u['foreman'], fn () => $this->workLogs($p1, array_slice($workers, 0, 4), 70, 28));
         $this->incomes($p1, [[72, IncomeType::Advance, 1_280_000], [25, IncomeType::Stage, 800_000]]);
 
         // 2. Объект с перерасходом материалов — попадает в «Требует внимания».
@@ -123,12 +124,24 @@ class DemoSeeder extends Seeder
             }
         }
 
-        // Подотчёт инженера: выдано 30 000, отчитался чеками на 17 350 — остаток висит больше 14 дней.
-        Advance::create(['date' => $this->ago(20), 'employee_id' => $engineer->id, 'type' => AdvanceType::Issue, 'amount' => 30_000, 'method' => PayMethod::Cash]);
-        $this->expenses($p1, [
-            [18, 'Инструмент и расходники', 9_850, 'Строймаркет', 'Дюбели, анкеры, изолента', $engineer],
-            [16, 'Прочее', 7_500, 'Столовая «Обед»', 'Питание бригады', $engineer],
-        ]);
+        // Подотчёт прораба: выдано 30 000, отчитался чеками на 17 350 — остаток висит больше 14 дней.
+        Advance::create(['date' => $this->ago(20), 'employee_id' => $foreman->id, 'type' => AdvanceType::Issue, 'amount' => 30_000, 'method' => PayMethod::Cash]);
+        // чеки прораб вносит сам — они видны у него на главной в «Мои расходы за месяц»
+        $this->actingAs($u['foreman'], fn () => $this->expenses($p1, [
+            [18, 'Инструмент и расходники', 9_850, 'Строймаркет', 'Дюбели, анкеры, изолента', $foreman],
+            [16, 'Прочее', 7_500, 'Столовая «Обед»', 'Питание бригады', $foreman],
+        ]));
+    }
+
+    /** Записи, созданные внутри $fn, получают created_by этого пользователя (через TracksCreator). */
+    private function actingAs(User $user, callable $fn): void
+    {
+        auth()->setUser($user);
+        try {
+            $fn();
+        } finally {
+            auth()->forgetUser();
+        }
     }
 
     private function ago(int $days): Carbon

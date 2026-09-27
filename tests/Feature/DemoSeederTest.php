@@ -6,8 +6,10 @@ use App\Filament\Resources\ProjectResource;
 use App\Filament\Widgets\ActiveProjects;
 use App\Filament\Widgets\NeedsAttention;
 use App\Models\Employee;
+use App\Models\Expense;
 use App\Models\Project;
 use App\Models\User;
+use App\Models\WorkLog;
 use App\Support\Attention;
 use App\Support\Money;
 use Database\Seeders\DemoSeeder;
@@ -30,8 +32,14 @@ class DemoSeederTest extends TestCase
         $this->assertStringContainsString('Перерасход по статье «Материалы и оборудование»', $texts);
         $this->assertStringContainsString('Не отчитался за '.Money::fmt(12650), $texts);
 
-        $engineer = Employee::where('name', 'Игорь Монтажов')->firstOrFail();
-        $this->assertEqualsWithDelta(12650, $engineer->advanceBalance(), 0.01);
+        $foreman = Employee::where('name', 'Игорь Монтажов')->firstOrFail();
+        $this->assertEqualsWithDelta(12650, $foreman->advanceBalance(), 0.01);
+
+        // свои чеки и журнал бригады прораб внёс сам — от его имени
+        $foremanUser = User::where('email', 'foreman@demo.local')->firstOrFail();
+        $this->assertEqualsWithDelta(17350, Expense::where('created_by', $foremanUser->id)->sum('amount'), 0.01);
+        $this->assertGreaterThan(0, WorkLog::where('created_by', $foremanUser->id)->count());
+        $this->assertGuest();
 
         $big = Project::where('name', 'like', 'ЖК%')->firstOrFail();
         $this->assertEqualsWithDelta(192000, $big->taxTotal(), 0.01);
@@ -54,12 +62,12 @@ class DemoSeederTest extends TestCase
         $this->get(ProjectResource::getUrl('view', ['record' => Project::first()]))->assertOk();
     }
 
-    public function test_demo_engineer_can_log_in_and_see_dashboard(): void
+    public function test_demo_foreman_can_log_in_and_see_dashboard(): void
     {
         $this->seed(DemoSeeder::class);
 
-        $engineer = User::where('email', 'engineer@demo.local')->firstOrFail();
-        $this->actingAs($engineer);
+        $foreman = User::where('email', 'foreman@demo.local')->firstOrFail();
+        $this->actingAs($foreman);
         $this->get('/')->assertOk();
     }
 }

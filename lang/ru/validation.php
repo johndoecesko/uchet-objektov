@@ -1,0 +1,37 @@
+<?php
+
+return [
+    'accepted' => 'Поле «:attribute» должно быть принято.',
+    'array' => 'Поле «:attribute» должно быть списком.',
+    'boolean' => 'Поле «:attribute» должно быть «да» или «нет».',
+    'confirmed' => 'Поле «:attribute» не совпадает с подтверждением.',
+    'date' => 'Поле «:attribute» должно быть датой.',
+    'distinct' => 'Поле «:attribute» повторяется.',
+    'email' => 'Поле «:attribute» должно быть корректным email.',
+    'exists' => 'Выбранное значение «:attribute» не найдено.',
+    'file' => 'Поле «:attribute» должно быть файлом.',
+    'image' => 'Поле «:attribute» должно быть изображением.',
+    'in' => 'Выбрано недопустимое значение «:attribute».',
+    'integer' => 'Поле «:attribute» должно быть целым числом.',
+    'max' => [
+        'numeric' => 'Поле «:attribute» не может быть больше :max.',
+        'file' => 'Файл «:attribute» не может быть больше :max КБ.',
+        'string' => 'Поле «:attribute» не может быть длиннее :max символов.',
+        'array' => 'В поле «:attribute» не может быть больше :max элементов.',
+    ],
+    'mimes' => 'Поле «:attribute» должно быть файлом типа: :values.',
+    'mimetypes' => 'Поле «:attribute» должно быть файлом типа: :values.',
+    'min' => [
+        'numeric' => 'Поле «:attribute» должно быть не меньше :min.',
+        'file' => 'Файл «:attribute» должен быть не меньше :min КБ.',
+        'string' => 'Поле «:attribute» должно быть не короче :min символов.',
+        'array' => 'В поле «:attribute» должно быть не меньше :min элементов.',
+    ],
+    'numeric' => 'Поле «:attribute» должно быть числом.',
+    'required' => 'Заполните поле «:attribute».',
+    'required_if' => 'Заполните поле «:attribute».',
+    'string' => 'Поле «:attribute» должно быть строкой.',
+    'unique' => 'Такое значение поля «:attribute» уже есть.',
+    'uploaded' => 'Не удалось загрузить «:attribute».',
+    'attributes' => [],
+];

@@ -13,6 +13,8 @@ use App\Filament\Widgets\RecordHistory;
 use App\Models\Expense;
 use App\Models\Income;
 use App\Models\WorkLog;
+use App\Reports\ProjectReport;
+use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
@@ -52,6 +54,18 @@ class ViewProject extends ViewRecord
             $this->quickAdd('addIncome', 'Поступление', 'heroicon-o-plus', Income::class, IncomeResource::formFields(withProject: false), 'incomes')
                 ->color('gray')
                 ->visible(fn () => Fields::isOffice()),
+            Action::make('exportXlsx')
+                ->label('Excel')
+                ->icon('heroicon-o-arrow-down-tray')
+                ->color('gray')
+                ->tooltip('Сводка, план/факт, расходы, работы и поступления за весь срок')
+                ->visible(fn () => Fields::isOffice())
+                ->action(function () {
+                    abort_unless(Fields::isOffice(), 403);
+                    $report = new ProjectReport($this->getRecord());
+
+                    return $report->build()->download($report->filename());
+                }),
             EditAction::make()->color('gray'),
         ];
     }

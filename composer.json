@@ -17,6 +17,7 @@
         "filament/filament": "^4.0",
         "laravel/framework": "^12.0",
         "laravel/tinker": "^2.10.1",
+        "openspout/openspout": "^4.32",
         "spatie/laravel-activitylog": "^4.12"
     },
     "require-dev": {

@@ -7,10 +7,6 @@ use App\Enums\PayMethod;
 use App\Filament\Resources\AdvanceResource\Pages;
 use App\Filament\Support\Fields;
 use App\Models\Advance;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Resources\Resource;
@@ -76,15 +72,15 @@ class AdvanceResource extends Resource
     {
         return $table
             ->columns(static::tableColumns())
-            ->filters([Fields::periodFilter(), Fields::employeeFilter(), SelectFilter::make('type')->label('Операция')->options(AdvanceType::class)])
+            ->filters([Fields::periodFilter(), Fields::employeeFilter(), SelectFilter::make('type')->label('Операция')->options(AdvanceType::class), Fields::trashedFilter()])
             ->defaultSort('date', 'desc')
-            ->recordActions([EditAction::make(), DeleteAction::make()])
-            ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])]);
+            ->recordActions(Fields::recordActions())
+            ->toolbarActions(Fields::bulkActions());
     }
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->with(['employee']);
+        return Fields::withTrashedForOffice(parent::getEloquentQuery())->with(['employee']);
     }
 
     public static function getPages(): array

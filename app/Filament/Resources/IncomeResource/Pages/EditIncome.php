@@ -4,6 +4,8 @@ namespace App\Filament\Resources\IncomeResource\Pages;
 
 use App\Filament\Resources\IncomeResource;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\RestoreAction;
 use Filament\Resources\Pages\EditRecord;
 
 class EditIncome extends EditRecord
@@ -12,7 +14,7 @@ class EditIncome extends EditRecord
 
     protected function getHeaderActions(): array
     {
-        return [DeleteAction::make()];
+        return [DeleteAction::make(), RestoreAction::make(), ForceDeleteAction::make()];
     }
 
     protected function getRedirectUrl(): string

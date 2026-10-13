@@ -5,10 +5,11 @@ namespace App\Models;
 use App\Models\Concerns\TracksCreator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class WorkLog extends Model
 {
-    use TracksCreator;
+    use SoftDeletes, TracksCreator;
 
     protected $fillable = ['date', 'project_id', 'employee_id', 'work', 'days', 'rate', 'amount', 'notes'];
 

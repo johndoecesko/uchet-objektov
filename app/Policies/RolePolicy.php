@@ -69,4 +69,26 @@ abstract class RolePolicy
     {
         return $this->office($user);
     }
+
+    // Корзина: восстановить и удалить навсегда — только офис, прорабу недоступно
+
+    public function restore(User $user, Model $record): bool
+    {
+        return $this->office($user);
+    }
+
+    public function restoreAny(User $user): bool
+    {
+        return $this->office($user);
+    }
+
+    public function forceDelete(User $user, Model $record): bool
+    {
+        return $this->office($user);
+    }
+
+    public function forceDeleteAny(User $user): bool
+    {
+        return $this->office($user);
+    }
 }

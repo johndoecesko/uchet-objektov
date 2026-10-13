@@ -6,10 +6,6 @@ use App\Enums\PayMethod;
 use App\Filament\Resources\PayoutResource\Pages;
 use App\Filament\Support\Fields;
 use App\Models\Payout;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Resources\Resource;
@@ -73,15 +69,15 @@ class PayoutResource extends Resource
     {
         return $table
             ->columns(static::tableColumns())
-            ->filters([Fields::periodFilter(), Fields::employeeFilter(), SelectFilter::make('method')->label('Способ')->options(PayMethod::class)])
+            ->filters([Fields::periodFilter(), Fields::employeeFilter(), SelectFilter::make('method')->label('Способ')->options(PayMethod::class), Fields::trashedFilter()])
             ->defaultSort('date', 'desc')
-            ->recordActions([EditAction::make(), DeleteAction::make()])
-            ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])]);
+            ->recordActions(Fields::recordActions())
+            ->toolbarActions(Fields::bulkActions());
     }
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()->with(['employee', 'project']);
+        return Fields::withTrashedForOffice(parent::getEloquentQuery())->with(['employee', 'project']);
     }
 
     public static function getPages(): array

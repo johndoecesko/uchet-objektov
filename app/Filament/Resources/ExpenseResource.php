@@ -6,10 +6,6 @@ use App\Enums\PaymentSource;
 use App\Filament\Resources\ExpenseResource\Pages;
 use App\Filament\Support\Fields;
 use App\Models\Expense;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -123,15 +119,15 @@ class ExpenseResource extends Resource
     {
         return $table
             ->columns(static::tableColumns())
-            ->filters(static::tableFilters())
+            ->filters([...static::tableFilters(), Fields::trashedFilter()])
             ->defaultSort('date', 'desc')
-            ->recordActions([EditAction::make(), DeleteAction::make()])
-            ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])]);
+            ->recordActions(Fields::recordActions())
+            ->toolbarActions(Fields::bulkActions());
     }
 
     public static function getEloquentQuery(): Builder
     {
-        $q = parent::getEloquentQuery()->with(['project', 'category', 'employee', 'creator']);
+        $q = Fields::withTrashedForOffice(parent::getEloquentQuery())->with(['project', 'category', 'employee', 'creator']);
 
         return Fields::isOffice() ? $q : $q->where('created_by', auth()->id());
     }

@@ -6,14 +6,24 @@ use App\Enums\ProjectStatus;
 use App\Models\Employee;
 use App\Models\ExpenseCategory;
 use App\Models\Project;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\ForceDeleteBulkAction;
+use Filament\Actions\RestoreAction;
+use Filament\Actions\RestoreBulkAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\Summarizers\Sum;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TrashedFilter;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 /** Общие поля и колонки, чтобы формы и таблицы были одинаковыми во всех разделах */
 class Fields
@@ -146,5 +156,28 @@ class Fields
 
                 return $out;
             });
+    }
+
+    /** Корзина: фильтр «Удалённые» (виден только офису — прорабу удаление недоступно) */
+    public static function trashedFilter(): TrashedFilter
+    {
+        return TrashedFilter::make()->label('Корзина')->visible(fn () => self::isOffice());
+    }
+
+    /** Офису в таблицах доступны и удалённые записи (фильтр «Корзина» по умолчанию их скрывает) */
+    public static function withTrashedForOffice(Builder $query): Builder
+    {
+        return self::isOffice() ? $query->withoutGlobalScopes([SoftDeletingScope::class]) : $query;
+    }
+
+    /** Действия строки для разделов с корзиной */
+    public static function recordActions(): array
+    {
+        return [EditAction::make(), DeleteAction::make(), RestoreAction::make(), ForceDeleteAction::make()];
+    }
+
+    public static function bulkActions(): array
+    {
+        return [BulkActionGroup::make([DeleteBulkAction::make(), RestoreBulkAction::make(), ForceDeleteBulkAction::make()])];
     }
 }

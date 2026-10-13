@@ -6,10 +6,6 @@ use App\Filament\Resources\WorkLogResource\Pages;
 use App\Filament\Support\Fields;
 use App\Models\Employee;
 use App\Models\WorkLog;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Resources\Resource;
@@ -93,15 +89,15 @@ class WorkLogResource extends Resource
     {
         return $table
             ->columns(static::tableColumns())
-            ->filters([Fields::periodFilter(), Fields::projectFilter(), Fields::employeeFilter()])
+            ->filters([Fields::periodFilter(), Fields::projectFilter(), Fields::employeeFilter(), Fields::trashedFilter()])
             ->defaultSort('date', 'desc')
-            ->recordActions([EditAction::make(), DeleteAction::make()])
-            ->toolbarActions([BulkActionGroup::make([DeleteBulkAction::make()])]);
+            ->recordActions(Fields::recordActions())
+            ->toolbarActions(Fields::bulkActions());
     }
 
     public static function getEloquentQuery(): Builder
     {
-        $q = parent::getEloquentQuery()->with(['project', 'employee', 'creator']);
+        $q = Fields::withTrashedForOffice(parent::getEloquentQuery())->with(['project', 'employee', 'creator']);
 
         return Fields::isOffice() ? $q : $q->where('created_by', auth()->id());
     }

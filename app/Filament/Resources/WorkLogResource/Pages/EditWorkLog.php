@@ -4,6 +4,8 @@ namespace App\Filament\Resources\WorkLogResource\Pages;
 
 use App\Filament\Resources\WorkLogResource;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\ForceDeleteAction;
+use Filament\Actions\RestoreAction;
 use Filament\Resources\Pages\EditRecord;
 
 class EditWorkLog extends EditRecord
@@ -12,7 +14,7 @@ class EditWorkLog extends EditRecord
 
     protected function getHeaderActions(): array
     {
-        return [DeleteAction::make()];
+        return [DeleteAction::make(), RestoreAction::make(), ForceDeleteAction::make()];
     }
 
     protected function getRedirectUrl(): string

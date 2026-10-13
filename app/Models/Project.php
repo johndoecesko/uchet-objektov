@@ -3,12 +3,15 @@
 namespace App\Models;
 
 use App\Enums\ProjectStatus;
+use App\Models\Concerns\LogsChanges;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 
 class Project extends Model
 {
+    use LogsChanges;
+
     protected $fillable = [
         'name', 'customer', 'customer_inn', 'customer_kpp', 'customer_ogrn', 'customer_address', 'address', 'contract_number', 'contract_date', 'contract_amount', 'tax_percent',
         'status', 'start_date', 'end_date', 'notes',

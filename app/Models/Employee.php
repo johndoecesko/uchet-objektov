@@ -4,12 +4,15 @@ namespace App\Models;
 
 use App\Enums\AdvanceType;
 use App\Enums\PaymentSource;
+use App\Models\Concerns\LogsChanges;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Employee extends Model
 {
+    use LogsChanges;
+
     protected $fillable = ['name', 'phone', 'position', 'day_rate', 'card_percent', 'is_active', 'user_id', 'notes'];
 
     protected $attributes = ['is_active' => true, 'day_rate' => 0, 'card_percent' => 0];

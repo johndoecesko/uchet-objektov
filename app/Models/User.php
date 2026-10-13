@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\UserRole;
+use App\Models\Concerns\LogsChanges;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -11,13 +12,19 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable implements FilamentUser
 {
-    use HasFactory, Notifiable;
+    use HasFactory, LogsChanges, Notifiable;
 
     protected $fillable = ['name', 'email', 'password', 'role', 'is_active', 'phone'];
 
     protected $hidden = ['password', 'remember_token'];
 
     protected $attributes = ['role' => 'foreman', 'is_active' => true];
+
+    /** Пароль в историю изменений не пишем */
+    protected function activityExcept(): array
+    {
+        return ['password', 'remember_token'];
+    }
 
     protected function casts(): array
     {

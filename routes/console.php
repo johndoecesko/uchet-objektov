@@ -23,3 +23,6 @@ Schedule::command('queue:work --stop-when-empty --max-time=50 --tries=3')
     ->everyMinute()->withoutOverlapping(5);
 
 Schedule::command('app:backup')->dailyAt('03:10')->withoutOverlapping(60);
+
+// История изменений: храним год (config/activitylog.php), чистим раз в неделю
+Schedule::command('activitylog:clean --force')->weeklyOn(0, '03:40');

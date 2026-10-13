@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\AdvanceType;
 use App\Enums\PayMethod;
+use App\Models\Concerns\LogsChanges;
 use App\Models\Concerns\TracksCreator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Advance extends Model
 {
-    use SoftDeletes, TracksCreator;
+    use LogsChanges, SoftDeletes, TracksCreator;
 
     protected $fillable = ['date', 'employee_id', 'type', 'amount', 'method', 'notes'];
 

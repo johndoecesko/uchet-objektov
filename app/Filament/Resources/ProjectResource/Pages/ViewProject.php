@@ -9,6 +9,7 @@ use App\Filament\Resources\ProjectResource\Widgets\ProjectPlanFact;
 use App\Filament\Resources\ProjectResource\Widgets\ProjectStats;
 use App\Filament\Resources\WorkLogResource;
 use App\Filament\Support\Fields;
+use App\Filament\Widgets\RecordHistory;
 use App\Models\Expense;
 use App\Models\Income;
 use App\Models\WorkLog;
@@ -63,5 +64,10 @@ class ViewProject extends ViewRecord
     public function getHeaderWidgetsColumns(): int | array
     {
         return 1;
+    }
+
+    protected function getFooterWidgets(): array
+    {
+        return [RecordHistory::class];
     }
 }

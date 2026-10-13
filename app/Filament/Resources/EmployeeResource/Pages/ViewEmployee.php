@@ -4,6 +4,7 @@ namespace App\Filament\Resources\EmployeeResource\Pages;
 
 use App\Filament\Resources\EmployeeResource;
 use App\Filament\Resources\EmployeeResource\Widgets\EmployeeStats;
+use App\Filament\Widgets\RecordHistory;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
 
@@ -24,5 +25,10 @@ class ViewEmployee extends ViewRecord
     protected function getHeaderWidgets(): array
     {
         return [EmployeeStats::class];
+    }
+
+    protected function getFooterWidgets(): array
+    {
+        return [RecordHistory::class];
     }
 }

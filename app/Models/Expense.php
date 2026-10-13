@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\PaymentSource;
+use App\Models\Concerns\LogsChanges;
 use App\Models\Concerns\TracksCreator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +12,7 @@ use Illuminate\Support\Facades\Storage;
 
 class Expense extends Model
 {
-    use SoftDeletes, TracksCreator;
+    use LogsChanges, SoftDeletes, TracksCreator;
 
     protected $fillable = [
         'date', 'project_id', 'expense_category_id', 'amount', 'supplier', 'document',

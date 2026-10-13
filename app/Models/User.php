@@ -33,6 +33,7 @@ class User extends Authenticatable implements FilamentUser
             'password' => 'hashed',
             'role' => UserRole::class,
             'is_active' => 'boolean',
+            'max_user_id' => 'integer',
         ];
     }
 

@@ -2,14 +2,15 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\ExpenseSource;
 use App\Enums\PaymentSource;
 use App\Filament\Resources\ExpenseResource\Pages;
 use App\Filament\Support\Fields;
 use App\Models\Expense;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Utilities\Get;
@@ -101,6 +102,10 @@ class ExpenseResource extends Resource
                 ->placeholder('—')
                 ->icon('heroicon-o-paper-clip')
                 ->toggleable(),
+            TextColumn::make('source')->label('Откуда')->badge()->color('info')
+                ->state(fn (Expense $r) => $r->source === ExpenseSource::Max ? 'из MAX' : null)
+                ->placeholder('')
+                ->toggleable(),
             TextColumn::make('creator.name')->label('Внёс')->toggleable(isToggledHiddenByDefault: true),
         ]));
     }
@@ -112,6 +117,7 @@ class ExpenseResource extends Resource
             $withProject ? Fields::projectFilter() : null,
             Fields::categoryFilter(),
             SelectFilter::make('payment_source')->label('Чем оплачено')->options(PaymentSource::class),
+            SelectFilter::make('source')->label('Откуда')->options(ExpenseSource::class),
         ]));
     }
 

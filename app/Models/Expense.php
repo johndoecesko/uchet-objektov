@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ExpenseSource;
 use App\Enums\PaymentSource;
 use App\Models\Concerns\LogsChanges;
 use App\Models\Concerns\TracksCreator;
@@ -16,8 +17,10 @@ class Expense extends Model
 
     protected $fillable = [
         'date', 'project_id', 'expense_category_id', 'amount', 'supplier', 'document',
-        'payment_source', 'employee_id', 'description', 'attachments',
+        'payment_source', 'employee_id', 'description', 'attachments', 'source',
     ];
+
+    protected $attributes = ['source' => 'web'];
 
     protected function casts(): array
     {
@@ -26,6 +29,7 @@ class Expense extends Model
             'amount' => 'decimal:2',
             'payment_source' => PaymentSource::class,
             'attachments' => 'array',
+            'source' => ExpenseSource::class,
         ];
     }
 

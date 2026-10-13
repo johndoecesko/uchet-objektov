@@ -29,4 +29,13 @@ return [
         'url' => env('DADATA_URL', 'https://suggestions.dadata.ru/suggestions/api/4_1/rs'),
     ],
 
+    // Бот в MAX для чеков (https://dev.max.ru). Токен — от @MasterBot, секрет вебхука — любая строка A-Z a-z 0-9 _ -
+    'max' => [
+        'token' => env('MAX_BOT_TOKEN'),
+        'webhook_secret' => env('MAX_WEBHOOK_SECRET'),
+        'url' => env('MAX_API_URL', 'https://platform-api2.max.ru'),
+        // false — событие обрабатывается сразу после ответа MAX; true — через очередь (воркер раз в минуту)
+        'queue' => (bool) env('MAX_QUEUE', false),
+    ],
+
 ];

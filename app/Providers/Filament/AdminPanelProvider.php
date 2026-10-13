@@ -2,21 +2,25 @@
 
 namespace App\Providers\Filament;
 
+use App\Support\Max\MaxApi;
+use App\Support\Max\MaxBot;
+use Filament\Actions\Action;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Notifications\Notification;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\View\PanelsRenderHook;
-use Illuminate\Support\HtmlString;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\HtmlString;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 class AdminPanelProvider extends PanelProvider
@@ -42,6 +46,31 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(PanelsRenderHook::BODY_END, fn (): HtmlString => new HtmlString(
                 "<script>if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js')); }</script>"
             ))
+            ->userMenuItems([
+                // Бот MAX: одноразовый код для привязки (показывается, только если бот настроен)
+                Action::make('maxLink')
+                    ->label(fn () => auth()->user()?->max_user_id ? 'MAX подключён — отключить' : 'Подключить MAX')
+                    ->icon('heroicon-o-chat-bubble-left-right')
+                    ->visible(fn () => MaxApi::enabled())
+                    ->requiresConfirmation(fn () => (bool) auth()->user()?->max_user_id)
+                    ->modalHeading('Отключить MAX?')
+                    ->modalDescription('Бот перестанет принимать от вас чеки, пока не подключите снова.')
+                    ->action(function () {
+                        $user = auth()->user();
+                        if ($user->max_user_id) {
+                            $user->forceFill(['max_user_id' => null])->save();
+                            Notification::make()->title('MAX отключён')->success()->send();
+
+                            return;
+                        }
+                        Notification::make()
+                            ->title('Код для MAX: '.MaxBot::linkCode($user))
+                            ->body('Отправьте этот код боту в MAX в течение 10 минут. После этого присылайте боту фото чеков.')
+                            ->persistent()
+                            ->success()
+                            ->send();
+                    }),
+            ])
             ->colors(['primary' => Color::Blue])
             ->maxContentWidth('full')
             ->sidebarCollapsibleOnDesktop()

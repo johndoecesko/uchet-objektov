@@ -19,4 +19,18 @@ class ExampleTest extends TestCase
         $this->assertFileExists(public_path('icons/maskable-512.png'));
         $this->assertJson(file_get_contents(public_path('manifest.json')));
     }
+
+    public function test_security_headers(): void
+    {
+        $r = $this->get('/login')->assertOk()
+            ->assertHeader('X-Content-Type-Options', 'nosniff')
+            ->assertHeader('X-Frame-Options', 'SAMEORIGIN')
+            ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
+            ->assertHeader('Permissions-Policy', 'geolocation=(), microphone=()')
+            ->assertHeaderMissing('Strict-Transport-Security'); // только для HTTPS
+        $this->assertStringNotContainsString('camera', $r->headers->get('Permissions-Policy'));
+
+        $this->get('https://localhost/login')
+            ->assertHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    }
 }

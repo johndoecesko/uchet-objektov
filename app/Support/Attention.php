@@ -9,19 +9,30 @@ use App\Filament\Resources\ProjectResource;
 use App\Models\Advance;
 use App\Models\Employee;
 use App\Models\Project;
+use App\Models\Setting;
 use Illuminate\Support\Collection;
 
 /** Что требует внимания: перерасходы, низкая маржа, незакрытый подотчёт, долги */
 class Attention
 {
-    public const ADVANCE_DAYS = 14;
+    /** Подотчёт без отчёта дольше стольких дней — в список (Настройки → Параметры) */
+    public static function advanceDays(): int
+    {
+        return max(1, (int) Setting::get('attention.advance_days'));
+    }
 
-    public const LOW_MARGIN = 10.0;
+    /** Прогноз рентабельности ниже стольких процентов — предупреждение */
+    public static function lowMargin(): float
+    {
+        return (float) Setting::get('attention.low_margin');
+    }
 
     /** @return Collection<int, array{level:string, title:string, text:string, amount:float, url:string}> */
     public static function items(): Collection
     {
         $items = collect();
+        $lowMargin = self::lowMargin();
+        $advanceDays = self::advanceDays();
 
         $projects = Project::query()
             ->whereIn('status', [ProjectStatus::Active->value, ProjectStatus::Completed->value])
@@ -50,9 +61,9 @@ class Attention
                         $items->push(['level' => 'danger', 'title' => $p->name,
                             'text' => 'По прогнозу объект в убытке: '.Money::fmt($forecast),
                             'amount' => -$forecast, 'url' => $url]);
-                    } elseif ($forecast / $contract * 100 < self::LOW_MARGIN) {
+                    } elseif ($forecast / $contract * 100 < $lowMargin) {
                         $items->push(['level' => 'warning', 'title' => $p->name,
-                            'text' => 'Прогноз рентабельности '.Money::pct($forecast, $contract).' (ниже '.(int) self::LOW_MARGIN.'%)',
+                            'text' => 'Прогноз рентабельности '.Money::pct($forecast, $contract).' (ниже '.rtrim(rtrim(number_format($lowMargin, 1, ',', ''), '0'), ',').'%)',
                             'amount' => $forecast, 'url' => $url]);
                     }
                 }
@@ -73,7 +84,7 @@ class Attention
             if ($bal > 0.009) {
                 $last = Advance::where('employee_id', $e->id)->where('type', AdvanceType::Issue->value)->max('date');
                 $days = $last ? (int) now()->startOfDay()->diffInDays(\Illuminate\Support\Carbon::parse($last), true) : 0;
-                if ($days >= self::ADVANCE_DAYS) {
+                if ($days >= $advanceDays) {
                     $items->push(['level' => 'danger', 'title' => $e->name,
                         'text' => 'Не отчитался за '.Money::fmt($bal).", последняя выдача {$days} дн. назад",
                         'amount' => $bal, 'url' => EmployeeResource::getUrl('view', ['record' => $e])]);

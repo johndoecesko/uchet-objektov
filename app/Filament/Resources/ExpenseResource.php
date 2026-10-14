@@ -7,7 +7,6 @@ use App\Enums\PaymentSource;
 use App\Filament\Resources\ExpenseResource\Pages;
 use App\Filament\Support\Fields;
 use App\Models\Expense;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -61,17 +60,7 @@ class ExpenseResource extends Resource
                 TextInput::make('document')->label('Документ (чек, счёт, УПД)')->maxLength(255),
             ]),
             Textarea::make('description')->label('Что купили / комментарий')->rows(2)->columnSpanFull(),
-            FileUpload::make('attachments')
-                ->label('Фото чеков и документов')
-                ->multiple()
-                ->disk('local')
-                ->directory('receipts')
-                ->visibility('private')
-                ->acceptedFileTypes(['image/*', 'application/pdf'])
-                ->maxSize(10240)
-                ->openable()
-                ->downloadable()
-                ->columnSpanFull(),
+            Fields::attachments(),
         ]);
     }
 

@@ -4,16 +4,16 @@ namespace App\Models;
 
 use App\Enums\ExpenseSource;
 use App\Enums\PaymentSource;
+use App\Models\Concerns\HasAttachments;
 use App\Models\Concerns\LogsChanges;
 use App\Models\Concerns\TracksCreator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Storage;
 
 class Expense extends Model
 {
-    use LogsChanges, SoftDeletes, TracksCreator;
+    use HasAttachments, LogsChanges, SoftDeletes, TracksCreator;
 
     protected $fillable = [
         'date', 'project_id', 'expense_category_id', 'amount', 'supplier', 'document',
@@ -38,14 +38,6 @@ class Expense extends Model
         static::saving(function (Expense $e) {
             if ($e->payment_source !== PaymentSource::Advance) {
                 $e->employee_id = null;
-            }
-        });
-
-        // Окончательное удаление из корзины — убираем и файлы чеков
-        static::forceDeleted(function (Expense $e) {
-            $files = array_filter((array) ($e->attachments ?? []), fn ($f) => is_string($f) && str_starts_with($f, 'receipts/'));
-            if ($files) {
-                Storage::disk('local')->delete(array_values($files));
             }
         });
     }

@@ -15,6 +15,7 @@ use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Tables\Columns\Summarizers\Sum;
@@ -93,6 +94,39 @@ class Fields
             ->relationship('category', 'name', fn (Builder $query) => $query->where('is_active', true)->where('is_labor', false)->where('is_tax', false)->orderBy('sort'))
             ->preload()
             ->required();
+    }
+
+    /**
+     * Фото и PDF документов. Фото уменьшаются в браузере до 1920 px по большей стороне —
+     * с телефона уходит ~0,5 МБ вместо 5–10 МБ. PDF не меняются.
+     */
+    public static function attachments(string $directory = 'receipts', string $label = 'Фото чеков и документов'): FileUpload
+    {
+        return FileUpload::make('attachments')
+            ->label($label)
+            ->multiple()
+            ->disk('local')
+            ->directory($directory)
+            ->visibility('private')
+            ->acceptedFileTypes(['image/*', 'application/pdf'])
+            ->maxSize(10240)
+            ->automaticallyResizeImagesMode('contain')
+            ->automaticallyResizeImagesToWidth('1920')
+            ->automaticallyResizeImagesToHeight('1920')
+            ->automaticallyUpscaleImagesWhenResizing(false)
+            ->openable()
+            ->downloadable()
+            ->columnSpanFull();
+    }
+
+    /** Колонка «сколько файлов приложено» */
+    public static function attachmentsColumn(): TextColumn
+    {
+        return TextColumn::make('attachments')->label('Файлы')
+            ->state(fn ($record) => count($record->attachments ?? []) ?: null)
+            ->placeholder('—')
+            ->icon('heroicon-o-paper-clip')
+            ->toggleable();
     }
 
     public static function dateColumn(string $name = 'date', string $label = 'Дата'): TextColumn

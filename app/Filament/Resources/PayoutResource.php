@@ -45,6 +45,7 @@ class PayoutResource extends Resource
                 Fields::project(false)->required(false)->helperText('Необязательно: если выплата за конкретный объект'),
             ]),
             Textarea::make('notes')->label('Примечание')->rows(2)->columnSpanFull(),
+            Fields::attachments('documents/payouts', 'Чек перевода, расписка (фото или PDF)'),
         ]);
     }
 
@@ -62,6 +63,7 @@ class PayoutResource extends Resource
             TextColumn::make('method')->label('Способ')->badge(),
             TextColumn::make('project.name')->label('Объект')->placeholder('—')->limit(30),
             TextColumn::make('notes')->label('Примечание')->limit(40)->toggleable(),
+            Fields::attachmentsColumn(),
         ]));
     }
 

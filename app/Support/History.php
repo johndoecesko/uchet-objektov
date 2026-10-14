@@ -18,6 +18,7 @@ use App\Models\Income;
 use App\Models\Payout;
 use App\Models\Project;
 use App\Models\ProjectBudget;
+use App\Models\Setting;
 use App\Models\User;
 use App\Models\WorkLog;
 use BackedEnum;
@@ -38,6 +39,7 @@ class History
         ProjectBudget::class => 'План по статье',
         Employee::class => 'Сотрудник',
         User::class => 'Пользователь',
+        Setting::class => 'Настройка',
     ];
 
     public const EVENTS = [
@@ -69,6 +71,7 @@ class History
         'tax_percent' => 'Налог, %', 'status' => 'Статус', 'start_date' => 'Начало', 'end_date' => 'Окончание',
         'phone' => 'Телефон', 'position' => 'Должность', 'day_rate' => 'Ставка в день', 'card_percent' => '% на карту',
         'is_active' => 'Активен', 'email' => 'Email', 'role' => 'Роль', 'source' => 'Источник',
+        'key' => 'Параметр', 'value' => 'Значение',
     ];
 
     private const MONEY = ['amount', 'rate', 'contract_amount', 'day_rate'];

@@ -55,7 +55,7 @@ class ProjectStats extends StatsOverviewWidget
             Stat::make('Прогноз прибыли', Money::fmt($forecast))
                 ->description('Рентабельность '.Money::pct($forecast, $contract)
                     .' · сейчас '.Money::fmt($margin).' · по деньгам '.Money::fmt($received - $cost, true))
-                ->color($forecast < 0 ? 'danger' : ($contract > 0 && $forecast / $contract * 100 < Attention::LOW_MARGIN ? 'warning' : 'success')),
+                ->color($forecast < 0 ? 'danger' : ($contract > 0 && $forecast / $contract * 100 < Attention::lowMargin() ? 'warning' : 'success')),
         ];
     }
 }

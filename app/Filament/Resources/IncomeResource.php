@@ -48,6 +48,7 @@ class IncomeResource extends Resource
             ]),
             TextInput::make('document')->label('Документ (п/п, счёт, акт)')->maxLength(255),
             Textarea::make('notes')->label('Примечание')->rows(2)->columnSpanFull(),
+            Fields::attachments('documents/incomes', 'Платёжки, акты (фото или PDF)'),
         ]);
     }
 
@@ -65,6 +66,7 @@ class IncomeResource extends Resource
             Fields::moneyColumn(),
             TextColumn::make('method')->label('Способ')->badge()->color('gray')->toggleable(),
             TextColumn::make('document')->label('Документ')->toggleable(),
+            Fields::attachmentsColumn(),
         ]));
     }
 

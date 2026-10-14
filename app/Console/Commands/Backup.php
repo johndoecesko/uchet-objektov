@@ -2,14 +2,17 @@
 
 namespace App\Console\Commands;
 
+use App\Support\BackupOffsite;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Log;
 use RuntimeException;
 use Symfony\Component\Process\Process;
+use Throwable;
 
 class Backup extends Command
 {
-    protected $signature = 'app:backup {--no-files : Только база, без папки с чеками}';
+    protected $signature = 'app:backup {--no-files : Только база, без папки с чеками} {--no-offsite : Не выгружать в облако (WebDAV)}';
 
     protected $description = 'Резервная копия базы (sql.gz) и чеков (tar.gz) в config(backup.path) с ротацией';
 
@@ -24,12 +27,13 @@ class Backup extends Command
 
         $now = now();
 
+        $made = [];
         try {
-            $sql = $this->dumpDatabase($dir, $now);
+            $made[] = $sql = $this->dumpDatabase($dir, $now);
             $this->info('База: '.$sql.' ('.$this->size($sql).')');
 
             if (! $this->option('no-files')) {
-                $files = $this->archiveFiles($dir, $now);
+                $made[] = $files = $this->archiveFiles($dir, $now);
                 $this->info('Чеки: '.$files.' ('.$this->size($files).')');
             }
         } catch (RuntimeException $e) {
@@ -40,6 +44,26 @@ class Backup extends Command
 
         foreach (self::rotate($dir, $now, (int) config('backup.keep_days'), (int) config('backup.keep_weeks')) as $old) {
             $this->line('Удалена старая копия: '.basename($old));
+        }
+
+        return $this->option('no-offsite') || ! BackupOffsite::enabled() ? self::SUCCESS : $this->offsite($made);
+    }
+
+    /** Копия наружу (Nextcloud): ошибка не отменяет локальный бэкап, но пишется в лог и видна в «Требует внимания» */
+    private function offsite(array $files): int
+    {
+        $client = app(BackupOffsite::class);
+        try {
+            foreach ($files as $file) {
+                $client->upload($file);
+                $this->info('В облако: '.basename($file));
+            }
+            $client->markSuccess();
+        } catch (Throwable $e) {
+            Log::warning('Бэкап: выгрузка в облако не удалась', ['error' => mb_substr($e->getMessage(), 0, 200)]);
+            $this->error('Выгрузка в облако не удалась: '.mb_substr($e->getMessage(), 0, 200));
+
+            return self::FAILURE;
         }
 
         return self::SUCCESS;

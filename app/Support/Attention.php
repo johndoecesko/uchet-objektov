@@ -4,6 +4,7 @@ namespace App\Support;
 
 use App\Enums\AdvanceType;
 use App\Enums\ProjectStatus;
+use App\Filament\Pages\Settings;
 use App\Filament\Resources\EmployeeResource;
 use App\Filament\Resources\ProjectResource;
 use App\Models\Advance;
@@ -89,6 +90,16 @@ class Attention
                         'text' => 'Не отчитался за '.Money::fmt($bal).", последняя выдача {$days} дн. назад",
                         'amount' => $bal, 'url' => EmployeeResource::getUrl('view', ['record' => $e])]);
                 }
+            }
+        }
+
+        // Копия в облако: настроена, но давно не проходила
+        if (BackupOffsite::enabled()) {
+            $days = BackupOffsite::daysSinceLast();
+            if ($days === null || $days >= 2) {
+                $items->push(['level' => 'warning', 'title' => 'Резервная копия',
+                    'text' => $days === null ? 'Копия в облако (Nextcloud) ещё ни разу не выгружалась' : "Копия в облако не выгружалась {$days} дн.",
+                    'amount' => 0.0, 'url' => Settings::getUrl()]);
             }
         }
 

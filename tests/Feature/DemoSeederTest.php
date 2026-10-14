@@ -39,6 +39,7 @@ class DemoSeederTest extends TestCase
         $foremanUser = User::where('email', 'foreman@demo.local')->firstOrFail();
         $this->assertEqualsWithDelta(17350, Expense::where('created_by', $foremanUser->id)->sum('amount'), 0.01);
         $this->assertGreaterThan(0, WorkLog::where('created_by', $foremanUser->id)->count());
+        $this->assertSame(1, Expense::where('source', 'max')->count());
         $this->assertGuest();
 
         $big = Project::where('name', 'like', 'ЖК%')->firstOrFail();

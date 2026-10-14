@@ -15,7 +15,7 @@ class ConsoleCommandsTest extends TestCase
 
     public function test_admin_command_rejects_cyrillic_email_before_insert(): void
     {
-        $this->artisan('app:admin', ['email' => 'иван@bk.ru'])
+        $this->artisan('app:admin', ['email' => 'иван@example.ru'])
             ->expectsOutputToContain('Некорректный email')
             ->assertFailed();
 

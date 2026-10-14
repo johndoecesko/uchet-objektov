@@ -52,3 +52,6 @@ read -r -p "Имя администратора [Администратор]: " 
 echo
 echo "Готово: $APP_URL"
 echo "Токен DaData (необязательно) — строка DADATA_TOKEN= в .env, затем: $PHP artisan optimize"
+echo "Планировщик (очередь, ночной бэкап) — добавьте в crontab -e:"
+echo "  * * * * * cd $(pwd) && $PHP artisan schedule:run >> /dev/null 2>&1"
+echo "Бот MAX для чеков (необязательно) — MAX_BOT_TOKEN и MAX_WEBHOOK_SECRET в .env, затем: $PHP artisan optimize && $PHP artisan max:webhook-set"

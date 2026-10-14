@@ -131,6 +131,8 @@ class DemoSeeder extends Seeder
             [18, 'Инструмент и расходники', 9_850, 'Строймаркет', 'Дюбели, анкеры, изолента', $foreman],
             [16, 'Прочее', 7_500, 'Столовая «Обед»', 'Питание бригады', $foreman],
         ]));
+        // этот чек прораб прислал через бота MAX
+        Expense::where('created_by', $u['foreman']->id)->where('supplier', 'Строймаркет')->update(['source' => 'max']);
     }
 
     /** Записи, созданные внутри $fn, получают created_by этого пользователя (через TracksCreator). */

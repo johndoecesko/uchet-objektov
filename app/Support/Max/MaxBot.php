@@ -278,8 +278,9 @@ class MaxBot
         $paths = [];
         try {
             foreach ($state['files'] as $f) {
-                $path = 'receipts/'.Str::ulid().'.'.$f['ext'];
-                Storage::disk('local')->put($path, $this->api->download($f['url'], self::MAX_FILE));
+                $body = $this->api->download($f['url'], self::MAX_FILE);
+                $path = 'receipts/'.Str::ulid().'.'.self::extensionFor($body, $f['ext']);
+                Storage::disk('local')->put($path, $body);
                 $paths[] = $path;
             }
         } catch (Throwable $e) {
@@ -315,6 +316,21 @@ class MaxBot
                 .($employee ? ', из подотчёта.' : '.'),
             [[['text' => 'Открыть в учёте', 'url' => ExpenseResource::getUrl('edit', ['record' => $expense], panel: 'admin')]]],
         );
+    }
+
+    /** MAX отдаёт «image» в разных форматах (часто WebP) — расширение берём по содержимому */
+    public static function extensionFor(string $body, string $fallback): string
+    {
+        $mime = (new \finfo(FILEINFO_MIME_TYPE))->buffer($body) ?: '';
+
+        return match ($mime) {
+            'image/jpeg' => 'jpg',
+            'image/png' => 'png',
+            'image/webp' => 'webp',
+            'image/heic', 'image/heif' => 'heic',
+            'application/pdf' => 'pdf',
+            default => $fallback,
+        };
     }
 
     /** Подпись к фото: первая строка — поставщик (если строк несколько), остальное — описание */

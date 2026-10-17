@@ -194,6 +194,16 @@ class MaxBotTest extends TestCase
         Http::assertNothingSent();
     }
 
+    public function test_attachment_extension_follows_real_file_type(): void
+    {
+        $webp = 'RIFF'.pack('V', 26).'WEBPVP8 '.pack('V', 14).str_repeat("\0", 14);
+        $this->assertSame('webp', MaxBot::extensionFor($webp, 'jpg'));
+        $this->assertSame('jpg', MaxBot::extensionFor("\xFF\xD8\xFF\xE0\0\x10JFIF\0".str_repeat("\0", 32), 'png'));
+        $png = "\x89PNG\r\n\x1A\n".pack('N', 13).'IHDR'.pack('NN', 1, 1)."\x08\x02\0\0\0".str_repeat("\0", 16);
+        $this->assertSame('png', MaxBot::extensionFor($png, 'jpg'));
+        $this->assertSame('jpg', MaxBot::extensionFor('JPEG-DATA', 'jpg'));
+    }
+
     public function test_parse_amount(): void
     {
         $this->assertSame(1250.5, MaxBot::parseAmount('1 250,50'));

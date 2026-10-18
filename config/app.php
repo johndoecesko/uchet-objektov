@@ -54,6 +54,9 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    // Перенаправлять (301) запросы с других адресов сайта на адрес из APP_URL
+    'force_canonical_host' => (bool) env('APP_FORCE_CANONICAL_HOST', false),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

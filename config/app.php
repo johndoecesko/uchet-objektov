@@ -57,6 +57,10 @@ return [
     // Перенаправлять (301) запросы с других адресов сайта на адрес из APP_URL
     'force_canonical_host' => (bool) env('APP_FORCE_CANONICAL_HOST', false),
 
+    // Контакты поддержки — внизу публичных страниц, в письмах и сообщениях о блокировке
+    'support_email' => env('SUPPORT_EMAIL', '3000.freedom@gmail.com'),
+    'support_telegram' => env('SUPPORT_TELEGRAM', '@grdpr'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

@@ -114,4 +114,10 @@ return [
 
     'password_timeout' => env('AUTH_PASSWORD_TIMEOUT', 10800),
 
+    /*
+    | Открытая регистрация на /app/register. Выключена — зарегистрироваться можно
+    | только по приглашению в организацию (ссылка из письма или мессенджера).
+    */
+    'registration_enabled' => (bool) env('REGISTRATION_ENABLED', false),
+
 ];

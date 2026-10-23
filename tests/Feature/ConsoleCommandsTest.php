@@ -28,7 +28,10 @@ class ConsoleCommandsTest extends TestCase
             ->expectsQuestion('Пароль (мин. 8 символов)', 'secret123')
             ->assertSuccessful();
 
-        $this->assertTrue(User::where('email', 'boss@example.ru')->first()->isAdmin());
+        $boss = User::where('email', 'boss@example.ru')->first();
+        $this->assertTrue($boss->is_platform_admin);
+        $this->assertNotNull($boss->email_verified_at);
+        $this->assertSame(0, $boss->organizations()->count()); // данные организаций платформе не видны
     }
 
     public function test_backup_command_on_sqlite(): void
@@ -90,6 +93,9 @@ class ConsoleCommandsTest extends TestCase
 
         $this->assertSame(1, $code);
         $this->assertNull(BackupOffsite::daysSinceLast());
+        // предупреждение — только администратору платформы, не организациям
+        $this->assertStringNotContainsString('Копия в облако', Attention::items()->pluck('text')->implode('|'));
+        $this->actingAs(User::forceCreate(['name' => 'П', 'email' => 'p@test.ru', 'password' => 'secret123', 'is_platform_admin' => true]));
         $this->assertStringContainsString('Копия в облако (Nextcloud) ещё ни разу не выгружалась', Attention::items()->pluck('text')->implode('|'));
     }
 }

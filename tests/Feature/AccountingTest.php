@@ -12,7 +12,7 @@ use App\Filament\Resources\ExpenseResource;
 use App\Filament\Resources\IncomeResource;
 use App\Filament\Resources\PayoutResource;
 use App\Filament\Resources\ProjectResource;
-use App\Filament\Resources\UserResource;
+use App\Filament\Resources\MemberResource;
 use App\Filament\Resources\WorkLogResource;
 use App\Models\Advance;
 use App\Models\Employee;
@@ -103,15 +103,16 @@ class AccountingTest extends TestCase
         $this->fillData();
         $this->actingAs($this->admin);
 
-        $this->get('/')->assertOk();
+        $this->get('/app/montazh')->assertOk();
         Livewire::test(OverviewStats::class)->assertSee('Объектов в работе');
         Livewire::test(ActiveProjects::class)->assertSee('Школа №5, АПС')->assertSee(Money::fmt(135500))->assertSee(Money::fmt(495000));
 
         foreach ([ProjectResource::class, EmployeeResource::class, ExpenseResource::class, WorkLogResource::class,
-            PayoutResource::class, AdvanceResource::class, IncomeResource::class, ExpenseCategoryResource::class, UserResource::class] as $r) {
+            PayoutResource::class, AdvanceResource::class, IncomeResource::class, ExpenseCategoryResource::class] as $r) {
             $this->get($r::getUrl('index'))->assertOk();
             $this->get($r::getUrl('create'))->assertOk();
         }
+        $this->get(MemberResource::getUrl('index'))->assertOk()->assertSee('a@test.ru');
 
         $this->get(ProjectResource::getUrl('view', ['record' => $this->project]))->assertOk();
         Livewire::test(ProjectPlanFact::class, ['record' => $this->project])
@@ -135,7 +136,7 @@ class AccountingTest extends TestCase
         $this->fillData();
         $this->actingAs($this->foreman);
 
-        $this->get('/')->assertOk();
+        $this->get('/app/montazh')->assertOk();
         $this->assertFalse(OverviewStats::canView());
         $this->assertFalse(ActiveProjects::canView());
         $this->get(ExpenseResource::getUrl('index'))->assertOk();
@@ -145,7 +146,7 @@ class AccountingTest extends TestCase
 
         $this->get(IncomeResource::getUrl('index'))->assertForbidden();
         $this->get(PayoutResource::getUrl('index'))->assertForbidden();
-        $this->get(UserResource::getUrl('index'))->assertForbidden();
+        $this->get(MemberResource::getUrl('index'))->assertForbidden();
         $this->get(ExpenseResource::getUrl('edit', ['record' => Expense::first()]))->assertNotFound(); // чужая запись не видна
     }
 
@@ -237,6 +238,6 @@ class AccountingTest extends TestCase
     public function test_inactive_user_cannot_enter(): void
     {
         $this->foreman->update(['is_active' => false]);
-        $this->actingAs($this->foreman)->get('/')->assertForbidden();
+        $this->actingAs($this->foreman)->get('/app/montazh')->assertForbidden();
     }
 }

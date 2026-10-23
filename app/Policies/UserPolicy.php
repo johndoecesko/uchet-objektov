@@ -3,14 +3,37 @@
 namespace App\Policies;
 
 use App\Models\User;
-use Illuminate\Database\Eloquent\Model;
 
-class UserPolicy extends RolePolicy
+/** Учётные записи целиком — только администратор платформы (заблокировать / разблокировать). В организации — «Участники» */
+class UserPolicy
 {
-    protected bool $adminOnly = true;
-
-    public function delete(User $user, Model $record): bool
+    public function viewAny(User $user): bool
     {
-        return $user->isAdmin() && $user->id !== $record->getKey();
+        return (bool) $user->is_platform_admin;
+    }
+
+    public function view(User $user, User $record): bool
+    {
+        return (bool) $user->is_platform_admin;
+    }
+
+    public function create(User $user): bool
+    {
+        return false;
+    }
+
+    public function update(User $user, User $record): bool
+    {
+        return (bool) $user->is_platform_admin;
+    }
+
+    public function delete(User $user, User $record): bool
+    {
+        return false;
+    }
+
+    public function deleteAny(User $user): bool
+    {
+        return false;
     }
 }

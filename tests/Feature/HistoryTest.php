@@ -2,11 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserRole;
 use App\Filament\Resources\ActivityResource;
 use App\Filament\Resources\ActivityResource\Pages\ListActivities;
 use App\Filament\Resources\EmployeeResource;
 use App\Filament\Resources\ProjectResource;
 use App\Filament\Widgets\RecordHistory;
+use App\Models\Activity;
 use App\Models\Expense;
 use App\Models\ProjectBudget;
 use App\Models\User;
@@ -14,7 +16,6 @@ use App\Support\History;
 use App\Support\Money;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
-use Spatie\Activitylog\Models\Activity;
 use Tests\Feature\Concerns\SeedsAccounting;
 use Tests\TestCase;
 
@@ -65,15 +66,19 @@ class HistoryTest extends TestCase
     public function test_user_password_is_never_logged(): void
     {
         $this->actingAs($this->admin);
-        $u = User::create(['name' => 'Тест', 'email' => 't@test.ru', 'password' => 'secret123', 'role' => 'manager']);
+        $u = $this->member('Тест', 't@test.ru', UserRole::Manager);
         $u->update(['password' => 'other-secret', 'name' => 'Тест 2']);
 
-        foreach (Activity::where('subject_type', User::class)->get() as $a) {
+        // учётная запись — общая для всех организаций: в историю организации не попадает
+        $this->assertSame(0, Activity::where('subject_type', User::class)->count());
+        $this->assertNull(Activity::acrossOrganizations()->where('subject_type', User::class)->value('organization_id'));
+
+        foreach (Activity::acrossOrganizations()->where('subject_type', User::class)->get() as $a) {
             $this->assertArrayNotHasKey('password', $a->properties['attributes'] ?? []);
             $this->assertArrayNotHasKey('password', $a->properties['old'] ?? []);
             $this->assertStringNotContainsString('secret', json_encode($a->properties));
         }
-        $this->assertSame(['Название: Тест → Тест 2'], History::changes(Activity::where('subject_type', User::class)->latest('id')->first()));
+        $this->assertSame(['Название: Тест → Тест 2'], History::changes(Activity::acrossOrganizations()->where('subject_type', User::class)->latest('id')->first()));
     }
 
     public function test_history_page_is_admin_only(): void
@@ -90,7 +95,7 @@ class HistoryTest extends TestCase
 
     public function test_history_page_forbidden_for_manager(): void
     {
-        $manager = User::create(['name' => 'М', 'email' => 'm@test.ru', 'password' => 'secret123', 'role' => 'manager']);
+        $manager = $this->member('М', 'm@test.ru', UserRole::Manager);
         $this->actingAs($manager)->get(ActivityResource::getUrl('index'))->assertForbidden();
     }
 

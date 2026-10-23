@@ -4,13 +4,13 @@ namespace Tests\Feature;
 
 use App\Enums\ExpenseSource;
 use App\Enums\PaymentSource;
+use App\Models\Activity;
 use App\Models\Expense;
 use App\Support\Max\MaxBot;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
-use Spatie\Activitylog\Models\Activity;
 use Tests\Feature\Concerns\SeedsAccounting;
 use Tests\TestCase;
 
@@ -216,12 +216,12 @@ class MaxBotTest extends TestCase
 
     public function test_user_menu_has_link_action(): void
     {
-        $this->actingAs($this->foreman)->get('/')->assertOk()->assertSee('Подключить MAX');
+        $this->actingAs($this->foreman)->get('/app/montazh')->assertOk()->assertSee('Подключить MAX');
     }
 
     public function test_user_menu_hidden_without_bot_token(): void
     {
         config(['services.max.token' => null]);
-        $this->actingAs($this->foreman)->get('/')->assertOk()->assertDontSee('Подключить MAX');
+        $this->actingAs($this->foreman)->get('/app/montazh')->assertOk()->assertDontSee('Подключить MAX');
     }
 }

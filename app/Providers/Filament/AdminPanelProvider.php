@@ -2,6 +2,13 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Auth\EditProfile;
+use App\Filament\Auth\Login;
+use App\Filament\Auth\Register;
+use App\Filament\Pages\Tenancy\EditOrganizationProfile;
+use App\Filament\Pages\Tenancy\RegisterOrganization;
+use App\Http\Middleware\EnsureOrganizationIsActive;
+use App\Models\Organization;
 use App\Support\Max\MaxApi;
 use App\Support\Max\MaxBot;
 use Filament\Actions\Action;
@@ -30,8 +37,16 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('admin')
-            ->path('')
-            ->login()
+            ->path('app')
+            ->login(Login::class)
+            ->registration(Register::class)
+            ->profile(EditProfile::class, isSimple: false)
+            // Организации: /app/{slug}/…, переключатель вверху, своя роль в каждой
+            ->tenant(Organization::class, slugAttribute: 'slug')
+            ->tenantRegistration(RegisterOrganization::class)
+            ->tenantProfile(EditOrganizationProfile::class)
+            ->tenantMiddleware([EnsureOrganizationIsActive::class], isPersistent: true)
+            ->searchableTenantMenu(false)
             ->brandName('Учёт объектов')
             ->favicon(asset('icons/favicon-32.png'))
             // PWA: устанавливается на телефон как приложение (Chrome → «Установить приложение»)

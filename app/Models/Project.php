@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ProjectStatus;
+use App\Models\Concerns\BelongsToOrganization;
 use App\Models\Concerns\LogsChanges;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -10,7 +11,7 @@ use Illuminate\Support\Collection;
 
 class Project extends Model
 {
-    use LogsChanges;
+    use BelongsToOrganization, LogsChanges;
 
     protected $fillable = [
         'name', 'customer', 'customer_inn', 'customer_kpp', 'customer_ogrn', 'customer_address', 'address', 'contract_number', 'contract_date', 'contract_amount', 'tax_percent',
@@ -137,13 +138,13 @@ class Project extends Model
             ->pluck('total', 'expense_category_id')
             ->map(fn ($v) => (float) $v);
 
-        $laborId = ExpenseCategory::laborId();
+        $laborId = ExpenseCategory::laborId($this->organization_id);
         if ($laborId) {
             $fact[$laborId] = ($fact[$laborId] ?? 0) + $this->laborTotal();
         }
 
         // Налоги: факт = процент от договора; если плана нет — план равен расчёту
-        $taxId = ExpenseCategory::taxId();
+        $taxId = ExpenseCategory::taxId($this->organization_id);
         if ($taxId && $this->taxTotal() > 0) {
             $fact[$taxId] = ($fact[$taxId] ?? 0) + $this->taxTotal();
             if (! isset($plan[$taxId])) {
@@ -153,7 +154,7 @@ class Project extends Model
 
         $ids = $plan->keys()->merge($fact->keys())->unique();
 
-        return ExpenseCategory::query()
+        return ExpenseCategory::acrossOrganizations()->where('organization_id', $this->organization_id)
             ->whereIn('id', $ids)
             ->orderBy('sort')->orderBy('name')
             ->get()

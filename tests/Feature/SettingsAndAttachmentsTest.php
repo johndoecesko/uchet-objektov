@@ -69,7 +69,7 @@ class SettingsAndAttachmentsTest extends TestCase
 
     public function test_settings_page_forbidden_for_manager(): void
     {
-        $manager = \App\Models\User::create(['name' => 'М', 'email' => 'm@test.ru', 'password' => 'secret123', 'role' => 'manager']);
+        $manager = $this->member('М', 'm@test.ru', \App\Enums\UserRole::Manager);
         $this->actingAs($manager)->get(Settings::getUrl())->assertForbidden();
     }
 

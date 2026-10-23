@@ -10,7 +10,7 @@ use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\Models\Activity;
+use App\Models\Activity;
 
 /** История изменений одной записи (объекта — вместе с его планом по статьям) — внизу страницы просмотра */
 class RecordHistory extends TableWidget

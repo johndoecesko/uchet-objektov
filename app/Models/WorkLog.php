@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToOrganization;
 use App\Models\Concerns\LogsChanges;
 use App\Models\Concerns\TracksCreator;
 use Illuminate\Database\Eloquent\Model;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class WorkLog extends Model
 {
-    use LogsChanges, SoftDeletes, TracksCreator;
+    use BelongsToOrganization, LogsChanges, SoftDeletes, TracksCreator;
 
     protected $fillable = ['date', 'project_id', 'employee_id', 'work', 'days', 'rate', 'amount', 'notes'];
 
@@ -27,6 +28,11 @@ class WorkLog extends Model
                 $w->amount = round((float) $w->days * (float) $w->rate, 2);
             }
         });
+    }
+
+    protected function organizationReferences(): array
+    {
+        return ['project_id' => Project::class, 'employee_id' => Employee::class];
     }
 
     public function project(): BelongsTo

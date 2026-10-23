@@ -13,15 +13,17 @@ use App\Models\Employee;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\Income;
+use App\Models\Organization;
 use App\Models\Payout;
 use App\Models\Project;
 use App\Models\User;
 use App\Models\WorkLog;
+use App\Support\CurrentOrganization;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
 
 /**
- * Демо-данные: вымышленная монтажная организация, 4 объекта, 5 сотрудников.
+ * Демо-данные: вымышленная монтажная организация «Демо-Монтаж» (/app/demo), 4 объекта, 5 сотрудников.
  *
  *   php artisan db:seed --class=DemoSeeder
  *
@@ -38,13 +40,18 @@ class DemoSeeder extends Seeder
 
     public function run(): void
     {
-        if (app()->isProduction() && Project::query()->exists()) {
-            $this->command?->error('В базе уже есть объекты — демо-данные не добавлены, чтобы не смешать их с рабочими.');
+        if (app()->isProduction() || Organization::where('slug', 'demo')->exists()) {
+            $this->command?->error('Демо-организация уже есть (или это рабочий сервер) — демо-данные не добавлены.');
 
             return;
         }
 
-        $this->call(DatabaseSeeder::class);
+        $org = Organization::create(['name' => 'ООО «Демо-Монтаж»', 'slug' => 'demo', 'inn' => '6400000000']);
+        app(CurrentOrganization::class)->run($org, fn () => $this->fill($org));
+    }
+
+    private function fill(Organization $org): void
+    {
         $this->cat = ExpenseCategory::query()->pluck('id', 'name')->all();
 
         $u = [];
@@ -55,8 +62,10 @@ class DemoSeeder extends Seeder
         ];
         foreach ($users as [$email, $name, $role]) {
             $u[$role->value] = User::updateOrCreate(['email' => $email], [
-                'name' => $name, 'password' => self::PASSWORD, 'role' => $role, 'is_active' => true,
+                'name' => $name, 'password' => self::PASSWORD, 'is_active' => true,
             ]);
+            $u[$role->value]->forceFill(['email_verified_at' => now(), 'current_organization_id' => $org->id])->save();
+            $org->addMember($u[$role->value], $role);
         }
 
         $foreman = Employee::create(['name' => 'Игорь Монтажов', 'position' => 'Прораб', 'day_rate' => 4500, 'user_id' => $u['foreman']->id, 'phone' => '+7 900 000-00-01']);

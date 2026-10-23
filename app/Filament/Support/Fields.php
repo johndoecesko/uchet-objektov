@@ -5,7 +5,11 @@ namespace App\Filament\Support;
 use App\Enums\ProjectStatus;
 use App\Models\Employee;
 use App\Models\ExpenseCategory;
+use App\Models\Membership;
 use App\Models\Project;
+use App\Models\User;
+use App\Support\CurrentOrganization;
+use App\Support\OrganizationMismatch;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -32,6 +36,25 @@ class Fields
     public static function isOffice(): bool
     {
         return (bool) auth()->user()?->isOffice();
+    }
+
+    /**
+     * Участники текущей организации для выпадающих списков: [user_id => имя]
+     *
+     * @return array<int, string>
+     */
+    public static function memberOptions(): array
+    {
+        $orgId = app(CurrentOrganization::class)->id();
+        if (! $orgId) {
+            return [];
+        }
+
+        return User::query()
+            ->whereIn('id', Membership::query()->where('organization_id', $orgId)->select('user_id'))
+            ->orderBy('name')
+            ->pluck('name', 'id')
+            ->all();
     }
 
     /** Растянуть элементы формы на всю ширину (в Filament 4 блоки по умолчанию занимают одну колонку из двух) */
@@ -99,6 +122,8 @@ class Fields
     /**
      * Фото и PDF документов. Фото уменьшаются в браузере до 1920 px по большей стороне —
      * с телефона уходит ~0,5 МБ вместо 5–10 МБ. PDF не меняются.
+     * Новые файлы — в папку организации (receipts/{id}/…). Ссылки на файлы подписанные и выдаются
+     * только для файлов самой записи: подставить в форму чужой путь нельзя (preventFilePathTampering).
      */
     public static function attachments(string $directory = 'receipts', string $label = 'Фото чеков и документов'): FileUpload
     {
@@ -106,8 +131,9 @@ class Fields
             ->label($label)
             ->multiple()
             ->disk('local')
-            ->directory($directory)
+            ->directory(fn () => self::organizationDirectory($directory))
             ->visibility('private')
+            ->preventFilePathTampering()
             ->acceptedFileTypes(['image/*', 'application/pdf'])
             ->maxSize(10240)
             ->automaticallyResizeImagesMode('contain')
@@ -117,6 +143,15 @@ class Fields
             ->openable()
             ->downloadable()
             ->columnSpanFull();
+    }
+
+    /** 'documents/incomes' → 'documents/{id организации}/incomes' */
+    public static function organizationDirectory(string $directory): string
+    {
+        $orgId = app(CurrentOrganization::class)->id() ?? throw new OrganizationMismatch('Загрузка файла без организации');
+        [$root, $rest] = array_pad(explode('/', $directory, 2), 2, null);
+
+        return $root.'/'.$orgId.($rest ? '/'.$rest : '');
     }
 
     /** Колонка «сколько файлов приложено» */

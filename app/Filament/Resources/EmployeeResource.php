@@ -59,8 +59,8 @@ class EmployeeResource extends Resource
                     Toggle::make('is_active')->label('Работает')->default(true)->inline(false),
                 ]),
                 Select::make('user_id')->label('Учётная запись для входа')
-                    ->relationship('user', 'name')->searchable()->preload()
-                    ->helperText('Если сотрудник сам вносит расходы и журнал'),
+                    ->options(fn () => Fields::memberOptions())->searchable()
+                    ->helperText('Участник организации, если сотрудник сам вносит расходы и журнал (Настройки → Участники)'),
                 Textarea::make('notes')->label('Примечание')->rows(2)->columnSpanFull(),
             ]),
         ]);

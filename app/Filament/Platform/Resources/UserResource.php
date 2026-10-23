@@ -1,0 +1,76 @@
+<?php
+
+namespace App\Filament\Platform\Resources;
+
+use App\Filament\Platform\Resources\UserResource\Pages;
+use App\Models\User;
+use Filament\Actions\Action;
+use Filament\Notifications\Notification;
+use Filament\Resources\Resource;
+use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\TernaryFilter;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+
+/** Учётные записи платформы: где состоят, когда входили; заблокировать / разблокировать вход */
+class UserResource extends Resource
+{
+    protected static ?string $model = User::class;
+
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-users';
+
+    protected static ?int $navigationSort = 2;
+
+    protected static ?string $modelLabel = 'учётную запись';
+
+    protected static ?string $pluralModelLabel = 'Учётные записи';
+
+    protected static bool $hasTitleCaseModelLabel = false;
+
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->modifyQueryUsing(fn (Builder $q) => $q->with('organizations:id,name'))
+            ->columns([
+                TextColumn::make('id')->label('№')->sortable(),
+                TextColumn::make('name')->label('Имя')->searchable(),
+                TextColumn::make('email')->label('Email')->searchable()
+                    ->description(fn (User $u) => $u->email_verified_at ? null : 'почта не подтверждена'),
+                TextColumn::make('organizations.name')->label('Организации')->listWithLineBreaks()->limitList(3)->placeholder('—'),
+                IconColumn::make('is_active')->label('Вход')->boolean(),
+                IconColumn::make('is_platform_admin')->label('Админ платформы')->boolean()->toggleable(),
+                TextColumn::make('created_at')->label('Регистрация')->dateTime('d.m.Y H:i')->sortable(),
+                TextColumn::make('last_login_at')->label('Последний вход')->dateTime('d.m.Y H:i')->placeholder('—')->sortable(),
+            ])
+            ->filters([TernaryFilter::make('is_active')->label('Вход разрешён')])
+            ->defaultSort('id', 'desc')
+            ->recordActions([
+                Action::make('block')->label('Заблокировать')->icon('heroicon-o-lock-closed')->color('danger')
+                    ->visible(fn (User $u) => $u->is_active && $u->id !== auth()->id())
+                    ->requiresConfirmation()
+                    ->modalDescription('Человек не сможет войти ни в одну организацию, бот MAX перестанет принимать от него чеки.')
+                    ->action(function (User $u) {
+                        $u->update(['is_active' => false]);
+                        Notification::make()->title("{$u->email} заблокирован")->success()->send();
+                    }),
+                Action::make('unblock')->label('Разблокировать')->icon('heroicon-o-lock-open')->color('success')
+                    ->visible(fn (User $u) => ! $u->is_active)
+                    ->requiresConfirmation()
+                    ->action(function (User $u) {
+                        $u->update(['is_active' => true]);
+                        Notification::make()->title("{$u->email} разблокирован")->success()->send();
+                    }),
+            ]);
+    }
+
+    public static function canCreate(): bool
+    {
+        return false;
+    }
+
+    public static function getPages(): array
+    {
+        return ['index' => Pages\ListUsers::route('/')];
+    }
+}

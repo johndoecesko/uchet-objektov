@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ExpenseSource;
 use App\Enums\PaymentSource;
+use App\Models\Concerns\BelongsToOrganization;
 use App\Models\Concerns\HasAttachments;
 use App\Models\Concerns\LogsChanges;
 use App\Models\Concerns\TracksCreator;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Expense extends Model
 {
-    use HasAttachments, LogsChanges, SoftDeletes, TracksCreator;
+    use BelongsToOrganization, HasAttachments, LogsChanges, SoftDeletes, TracksCreator;
 
     protected $fillable = [
         'date', 'project_id', 'expense_category_id', 'amount', 'supplier', 'document',
@@ -40,6 +41,11 @@ class Expense extends Model
                 $e->employee_id = null;
             }
         });
+    }
+
+    protected function organizationReferences(): array
+    {
+        return ['project_id' => Project::class, 'expense_category_id' => ExpenseCategory::class, 'employee_id' => Employee::class];
     }
 
     public function project(): BelongsTo

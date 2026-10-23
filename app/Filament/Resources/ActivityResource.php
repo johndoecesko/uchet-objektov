@@ -4,13 +4,12 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ActivityResource\Pages;
 use App\Filament\Support\Fields;
-use App\Models\User;
+use App\Models\Activity;
 use App\Support\History;
 use Filament\Resources\Resource;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Spatie\Activitylog\Models\Activity;
 
 class ActivityResource extends Resource
 {
@@ -63,7 +62,7 @@ class ActivityResource extends Resource
                 SelectFilter::make('subject_type')->label('Раздел')->options(History::MODELS),
                 SelectFilter::make('event')->label('Событие')->options(History::EVENTS),
                 SelectFilter::make('causer_id')->label('Кто')
-                    ->options(fn () => User::query()->orderBy('name')->pluck('name', 'id')),
+                    ->options(fn () => Fields::memberOptions()),
             ])
             ->defaultSort('id', 'desc')
             ->recordActions([])

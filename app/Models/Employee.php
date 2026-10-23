@@ -4,14 +4,16 @@ namespace App\Models;
 
 use App\Enums\AdvanceType;
 use App\Enums\PaymentSource;
+use App\Models\Concerns\BelongsToOrganization;
 use App\Models\Concerns\LogsChanges;
+use App\Support\OrganizationMismatch;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Employee extends Model
 {
-    use LogsChanges;
+    use BelongsToOrganization, LogsChanges;
 
     protected $fillable = ['name', 'phone', 'position', 'day_rate', 'card_percent', 'is_active', 'user_id', 'notes'];
 
@@ -20,6 +22,15 @@ class Employee extends Model
     protected function casts(): array
     {
         return ['day_rate' => 'decimal:2', 'card_percent' => 'integer', 'is_active' => 'boolean'];
+    }
+
+    /** Учётная запись сотрудника — только участник этой же организации */
+    protected function assertReferencesInOrganization(): void
+    {
+        if ($this->user_id && ($this->isDirty('user_id') || $this->isDirty('organization_id'))
+            && ! Membership::acrossOrganizations()->where('organization_id', $this->organization_id)->where('user_id', $this->user_id)->exists()) {
+            throw new OrganizationMismatch("Пользователь {$this->user_id} не состоит в организации сотрудника");
+        }
     }
 
     public function user(): BelongsTo

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\AdvanceType;
 use App\Enums\PayMethod;
+use App\Models\Concerns\BelongsToOrganization;
 use App\Models\Concerns\LogsChanges;
 use App\Models\Concerns\TracksCreator;
 use Illuminate\Database\Eloquent\Model;
@@ -12,13 +13,18 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Advance extends Model
 {
-    use LogsChanges, SoftDeletes, TracksCreator;
+    use BelongsToOrganization, LogsChanges, SoftDeletes, TracksCreator;
 
     protected $fillable = ['date', 'employee_id', 'type', 'amount', 'method', 'notes'];
 
     protected function casts(): array
     {
         return ['date' => 'date', 'amount' => 'decimal:2', 'type' => AdvanceType::class, 'method' => PayMethod::class];
+    }
+
+    protected function organizationReferences(): array
+    {
+        return ['employee_id' => Employee::class];
     }
 
     public function employee(): BelongsTo

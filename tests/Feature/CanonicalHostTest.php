@@ -21,12 +21,12 @@ class CanonicalHostTest extends TestCase
 
     public function test_www_redirects_to_bare_domain(): void
     {
-        $this->get('https://www.finprorab.ru/login')->assertRedirect('https://finprorab.ru/login');
+        $this->get('https://www.finprorab.ru/app/login')->assertRedirect('https://finprorab.ru/app/login');
     }
 
     public function test_canonical_host_is_served(): void
     {
-        $this->get('https://finprorab.ru/login')->assertOk();
+        $this->get('https://finprorab.ru/app/login')->assertOk();
     }
 
     public function test_post_is_not_redirected(): void
@@ -38,6 +38,6 @@ class CanonicalHostTest extends TestCase
     public function test_disabled_by_default(): void
     {
         config(['app.force_canonical_host' => false]);
-        $this->get('http://uchet.easat.ru/login')->assertOk();
+        $this->get('http://uchet.easat.ru/app/login')->assertOk();
     }
 }

@@ -4,7 +4,6 @@ namespace App\Support;
 
 use App\Enums\AdvanceType;
 use App\Enums\ProjectStatus;
-use App\Filament\Pages\Settings;
 use App\Filament\Resources\EmployeeResource;
 use App\Filament\Resources\ProjectResource;
 use App\Models\Advance;
@@ -93,13 +92,14 @@ class Attention
             }
         }
 
-        // Копия в облако: настроена, но давно не проходила
-        if (BackupOffsite::enabled()) {
+        // Копия в облако: настроена, но давно не проходила. Это забота платформы, а не организации —
+        // видит только администратор платформы
+        if (BackupOffsite::enabled() && auth()->user()?->is_platform_admin) {
             $days = BackupOffsite::daysSinceLast();
             if ($days === null || $days >= 2) {
                 $items->push(['level' => 'warning', 'title' => 'Резервная копия',
                     'text' => $days === null ? 'Копия в облако (Nextcloud) ещё ни разу не выгружалась' : "Копия в облако не выгружалась {$days} дн.",
-                    'amount' => 0.0, 'url' => Settings::getUrl()]);
+                    'amount' => 0.0, 'url' => url('/platform')]);
             }
         }
 

@@ -10,16 +10,22 @@ use App\Models\Employee;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\Income;
+use App\Models\Organization;
 use App\Models\Payout;
 use App\Models\Project;
 use App\Models\ProjectBudget;
 use App\Models\User;
 use App\Models\WorkLog;
-use Database\Seeders\DatabaseSeeder;
+use Filament\Facades\Filament;
 
-/** Общие данные для тестов учёта: справочники, админ, прораб, объект, сотрудник и набор операций */
+/**
+ * Общие данные для тестов учёта: организация (она же текущая), админ, прораб, объект, сотрудник и набор операций.
+ * Справочник статей создаётся вместе с организацией.
+ */
 trait SeedsAccounting
 {
+    protected Organization $org;
+
     protected User $admin;
 
     protected User $foreman;
@@ -31,13 +37,31 @@ trait SeedsAccounting
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(DatabaseSeeder::class);
 
-        $this->admin = User::create(['name' => 'Админ', 'email' => 'a@test.ru', 'password' => 'secret123', 'role' => UserRole::Admin]);
-        $this->foreman = User::create(['name' => 'Прораб', 'email' => 'f@test.ru', 'password' => 'secret123', 'role' => UserRole::Foreman]);
+        $this->org = Organization::create(['name' => 'ООО «Монтаж»', 'slug' => 'montazh']);
+        $this->useOrganization($this->org);
+
+        $this->admin = $this->member('Админ', 'a@test.ru', UserRole::Admin);
+        $this->foreman = $this->member('Прораб', 'f@test.ru', UserRole::Foreman);
 
         $this->project = Project::create(['name' => 'Школа №5, АПС', 'customer' => 'МОУ СОШ №5', 'contract_amount' => 1000000, 'status' => 'active']);
         $this->emp = Employee::create(['name' => 'Иванов И.И.', 'day_rate' => 3000]);
+    }
+
+    /** Текущая организация: в панели (Filament) и для моделей */
+    protected function useOrganization(?Organization $org): void
+    {
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        Filament::setTenant($org, isQuiet: true);
+    }
+
+    /** Пользователь — участник организации с ролью (по умолчанию — текущей) */
+    protected function member(string $name, string $email, UserRole $role, ?Organization $org = null): User
+    {
+        $user = User::create(['name' => $name, 'email' => $email, 'password' => 'secret123']);
+        ($org ?? $this->org)->addMember($user, $role);
+
+        return $user;
     }
 
     protected function cat(string $like): ExpenseCategory

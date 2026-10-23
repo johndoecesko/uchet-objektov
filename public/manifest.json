@@ -4,7 +4,7 @@
   "description": "Затраты, работы и поступления по объектам",
   "lang": "ru",
   "id": "/",
-  "start_url": "/",
+  "start_url": "/app",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
@@ -16,7 +16,7 @@
     { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
   ],
   "shortcuts": [
-    { "name": "Новый расход", "short_name": "Расход", "url": "/expenses/create", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Запись в журнал работ", "short_name": "Работа", "url": "/work-logs/create", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
+    { "name": "Новый расход", "short_name": "Расход", "url": "/go/expenses/create", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] },
+    { "name": "Запись в журнал работ", "short_name": "Работа", "url": "/go/work-logs/create", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
   ]
 }

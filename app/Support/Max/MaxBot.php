@@ -3,14 +3,19 @@
 namespace App\Support\Max;
 
 use App\Enums\ExpenseSource;
+use App\Enums\OrganizationStatus;
 use App\Enums\PaymentSource;
 use App\Enums\ProjectStatus;
 use App\Filament\Resources\ExpenseResource;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
+use App\Models\Organization;
 use App\Models\Project;
 use App\Models\User;
+use App\Support\CurrentOrganization;
 use App\Support\Money;
+use Closure;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -20,8 +25,9 @@ use Illuminate\Support\Str;
 use Throwable;
 
 /**
- * Диалог бота: фото/PDF чека → объект → сумма → статья → расход.
- * Состояние — в кэше по max_user_id (30 минут), «отмена» сбрасывает.
+ * Диалог бота: фото/PDF чека → (организация) → объект → сумма → статья → расход.
+ * Состояние — в кэше по max_user_id (30 минут), «отмена» сбрасывает; в нём же organization_id.
+ * Пользователь в нескольких организациях — бот спрашивает, в какую, и запоминает выбор.
  * Бот действует от имени привязанного пользователя и проверяет его права (политики).
  */
 class MaxBot
@@ -92,44 +98,172 @@ class MaxBot
             return;
         }
 
-        if (! $user->can('create', Expense::class)) {
-            $this->api->send($maxId, 'У вашей учётной записи нет права вносить расходы.');
+        // Бот работает без панели: организацию выставляем явно, scope и права — по ней
+        $orgs = $this->organizations($user);
+        if ($orgs->isEmpty()) {
+            $this->forget($maxId);
+            $this->api->send($maxId, 'Ваша учётная запись не состоит ни в одной действующей организации. Попросите администратора пригласить вас.');
 
             return;
         }
 
         $files = $type === 'message_created' ? $this->files($message['body']['attachments'] ?? []) : [];
         $state = Cache::get($this->key($maxId));
+        $payload = (string) ($callback['payload'] ?? '');
+
+        // Выбор организации: кнопка «o:id» или команда «сменить организацию»
+        if (str_starts_with($payload, 'o:')) {
+            $this->onOrganization($maxId, $orgs, (int) substr($payload, 2), $state, $user);
+
+            return;
+        }
+        if (in_array(mb_strtolower($text), ['сменить организацию', 'организация', '/org'], true)) {
+            $orgs->count() > 1
+                ? $this->askOrganization($maxId, $orgs, $state ? [...$state, 'step' => 'organization'] : null)
+                : $this->api->send($maxId, 'Вы состоите в одной организации: «'.$orgs->first()->name.'».');
+
+            return;
+        }
+
+        $org = $this->organizationFor($maxId, $orgs, $state);
 
         if ($files) {
-            if ($state && ($state['step'] ?? null) === 'project') {
+            if ($state && in_array($state['step'] ?? null, ['organization', 'project'], true)) {
                 $state['files'] = [...$state['files'], ...$files];
                 $this->save($maxId, $state);
-                $this->api->send($maxId, 'Добавил файл к этому чеку ('.count($state['files']).'). На какой объект?');
+                $this->api->send($maxId, 'Добавил файл к этому чеку ('.count($state['files']).'). '.($state['step'] === 'project' ? 'На какой объект?' : 'В какую организацию?'));
 
                 return;
             }
             $state = ['step' => 'project', 'files' => $files, 'caption' => $text];
-            $this->save($maxId, $state);
-            $this->askProject($maxId);
+            if (! $org) {
+                $this->askOrganization($maxId, $orgs, [...$state, 'step' => 'organization']);
+
+                return;
+            }
+            $state['organization_id'] = $org->id;
+            $this->inOrganization($org, function () use ($maxId, $user, $state) {
+                if ($this->canCreate($maxId, $user)) {
+                    $this->save($maxId, $state);
+                    $this->askProject($maxId);
+                }
+            });
 
             return;
         }
 
         if (! $state) {
-            $this->api->send($maxId, "Пришлите фото чека или PDF — спрошу объект, сумму и статью и внесу расход.\nПодпись к фото попадёт в описание. «отмена» — начать заново.");
+            $this->api->send($maxId, "Пришлите фото чека или PDF — спрошу объект, сумму и статью и внесу расход.\nПодпись к фото попадёт в описание. «отмена» — начать заново."
+                .($orgs->count() > 1 ? "\nОрганизация: «".($org?->name ?? 'не выбрана')."». «сменить организацию» — выбрать другую." : ''));
 
             return;
         }
 
-        $payload = (string) ($callback['payload'] ?? '');
+        if ($state['step'] === 'organization') {
+            $this->askOrganization($maxId, $orgs, $state);
 
-        match ($state['step']) {
-            'project' => $this->onProject($maxId, $state, $payload, $text),
-            'amount' => $this->onAmount($maxId, $state, $text),
-            'category' => $this->onCategory($maxId, $state, $payload, $user),
-            default => $this->forget($maxId),
-        };
+            return;
+        }
+
+        if (! $org) {
+            $this->forget($maxId);
+            $this->api->send($maxId, 'Организация больше не доступна. Пришлите чек заново.');
+
+            return;
+        }
+
+        $this->inOrganization($org, function () use ($maxId, $state, $payload, $text, $user) {
+            if (! $this->canCreate($maxId, $user)) {
+                $this->forget($maxId);
+
+                return;
+            }
+            match ($state['step']) {
+                'project' => $this->onProject($maxId, $state, $payload, $text),
+                'amount' => $this->onAmount($maxId, $state, $text),
+                'category' => $this->onCategory($maxId, $state, $payload, $user),
+                default => $this->forget($maxId),
+            };
+        });
+    }
+
+    /** Действующие организации пользователя, где у него есть доступ */
+    private function organizations(User $user): Collection
+    {
+        return $user->organizations()
+            ->wherePivot('is_active', true)
+            ->where('organizations.status', OrganizationStatus::Active->value)
+            ->orderBy('name')
+            ->get();
+    }
+
+    /** Организация диалога: из состояния, иначе единственная, иначе запомненная */
+    private function organizationFor(int $maxId, Collection $orgs, ?array $state): ?Organization
+    {
+        if ($state && isset($state['organization_id'])) {
+            return $orgs->firstWhere('id', $state['organization_id']);
+        }
+        if ($orgs->count() === 1) {
+            return $orgs->first();
+        }
+
+        return $orgs->firstWhere('id', Cache::get($this->orgKey($maxId)));
+    }
+
+    private function askOrganization(int $maxId, Collection $orgs, ?array $state): void
+    {
+        if ($state) {
+            unset($state['organization_id'], $state['project_id'], $state['amount']);
+            $this->save($maxId, $state);
+        }
+        $buttons = $orgs->take(self::PROJECT_BUTTONS)
+            ->map(fn (Organization $o) => [['text' => $o->name, 'payload' => 'o:'.$o->id]])->values()->all();
+
+        $this->api->send($maxId, 'В какую организацию?', $buttons);
+    }
+
+    private function onOrganization(int $maxId, Collection $orgs, int $id, ?array $state, User $user): void
+    {
+        $org = $orgs->firstWhere('id', $id);
+        if (! $org) {
+            $this->askOrganization($maxId, $orgs, $state);
+
+            return;
+        }
+
+        Cache::forever($this->orgKey($maxId), $org->id);
+
+        if (! $state || empty($state['files'])) {
+            $this->forget($maxId);
+            $this->api->send($maxId, "Организация: «{$org->name}». Пришлите фото чека или PDF.");
+
+            return;
+        }
+
+        $state = ['step' => 'project', 'files' => $state['files'], 'caption' => $state['caption'] ?? '', 'organization_id' => $org->id];
+        $this->inOrganization($org, function () use ($maxId, $user, $state, $org) {
+            if ($this->canCreate($maxId, $user)) {
+                $this->save($maxId, $state);
+                $this->askProject($maxId, null, "Организация: «{$org->name}». На какой объект?");
+            } else {
+                $this->forget($maxId);
+            }
+        });
+    }
+
+    private function canCreate(int $maxId, User $user): bool
+    {
+        if ($user->can('create', Expense::class)) {
+            return true;
+        }
+        $this->api->send($maxId, 'У вашей учётной записи нет права вносить расходы в этой организации.');
+
+        return false;
+    }
+
+    private function inOrganization(Organization $org, Closure $callback): void
+    {
+        app(CurrentOrganization::class)->run($org, $callback);
     }
 
     private function unlinked(int $maxId, string $text, ?string $type): void
@@ -279,7 +413,7 @@ class MaxBot
         try {
             foreach ($state['files'] as $f) {
                 $body = $this->api->download($f['url'], self::MAX_FILE);
-                $path = 'receipts/'.Str::ulid().'.'.self::extensionFor($body, $f['ext']);
+                $path = 'receipts/'.$project->organization_id.'/'.Str::ulid().'.'.self::extensionFor($body, $f['ext']);
                 Storage::disk('local')->put($path, $body);
                 $paths[] = $path;
             }
@@ -314,7 +448,7 @@ class MaxBot
             $maxId,
             "Расход №{$expense->id} на объект «{$project->name}» добавлен: ".Money::fmt($expense->amount).", {$category->name}"
                 .($employee ? ', из подотчёта.' : '.'),
-            [[['text' => 'Открыть в учёте', 'url' => ExpenseResource::getUrl('edit', ['record' => $expense], panel: 'admin')]]],
+            [[['text' => 'Открыть в учёте', 'url' => ExpenseResource::getUrl('edit', ['record' => $expense], panel: 'admin', tenant: $project->organization)]]],
         );
     }
 
@@ -347,6 +481,12 @@ class MaxBot
     private function key(int $maxId): string
     {
         return 'max:dialog:'.$maxId;
+    }
+
+    /** Запомненная организация пользователя MAX (если он в нескольких) */
+    private function orgKey(int $maxId): string
+    {
+        return 'max:org:'.$maxId;
     }
 
     private function save(int $maxId, array $state): void

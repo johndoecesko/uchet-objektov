@@ -6,15 +6,16 @@ use App\Filament\Resources\AdvanceResource;
 use App\Filament\Resources\EmployeeResource;
 use App\Filament\Resources\ExpenseResource;
 use App\Filament\Resources\IncomeResource;
+use App\Filament\Resources\MemberResource;
 use App\Filament\Resources\PayoutResource;
 use App\Filament\Resources\ProjectResource;
-use App\Filament\Resources\UserResource;
 use App\Filament\Resources\WorkLogResource;
 use App\Models\Advance;
 use App\Models\Employee;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\Income;
+use App\Models\Membership;
 use App\Models\Payout;
 use App\Models\Project;
 use App\Models\ProjectBudget;
@@ -38,6 +39,7 @@ class History
         Project::class => 'Объект',
         ProjectBudget::class => 'План по статье',
         Employee::class => 'Сотрудник',
+        Membership::class => 'Участник',
         User::class => 'Пользователь',
         Setting::class => 'Настройка',
     ];
@@ -143,7 +145,7 @@ class History
             Income::class => IncomeResource::getUrl('edit', ['record' => $s]),
             Payout::class => PayoutResource::getUrl('edit', ['record' => $s]),
             Advance::class => AdvanceResource::getUrl('edit', ['record' => $s]),
-            User::class => UserResource::getUrl('edit', ['record' => $s]),
+            Membership::class => MemberResource::getUrl('edit', ['record' => $s]),
             default => null,
         };
     }

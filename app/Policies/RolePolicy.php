@@ -31,7 +31,7 @@ abstract class RolePolicy
 
     protected function isForeman(User $user): bool
     {
-        return $user->role === UserRole::Foreman;
+        return $user->currentRole() === UserRole::Foreman;
     }
 
     protected function ownsRecord(User $user, Model $record): bool

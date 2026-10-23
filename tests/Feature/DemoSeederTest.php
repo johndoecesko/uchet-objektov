@@ -7,12 +7,14 @@ use App\Filament\Widgets\ActiveProjects;
 use App\Filament\Widgets\NeedsAttention;
 use App\Models\Employee;
 use App\Models\Expense;
+use App\Models\Organization;
 use App\Models\Project;
 use App\Models\User;
 use App\Models\WorkLog;
 use App\Support\Attention;
 use App\Support\Money;
 use Database\Seeders\DemoSeeder;
+use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Livewire\Livewire;
 use Tests\TestCase;
@@ -21,9 +23,16 @@ class DemoSeederTest extends TestCase
 {
     use RefreshDatabase;
 
+    private function useDemo(): void
+    {
+        Filament::setCurrentPanel(Filament::getPanel('admin'));
+        Filament::setTenant(Organization::where('slug', 'demo')->firstOrFail(), isQuiet: true);
+    }
+
     public function test_demo_data_tells_a_story(): void
     {
         $this->seed(DemoSeeder::class);
+        $this->useDemo();
 
         $this->assertSame(4, Project::count());
         $this->assertSame(3, User::count());
@@ -52,12 +61,14 @@ class DemoSeederTest extends TestCase
     public function test_demo_admin_can_log_in_and_see_dashboard(): void
     {
         $this->seed(DemoSeeder::class);
+        $this->useDemo();
 
         $admin = User::where('email', 'admin@demo.local')->firstOrFail();
         $this->assertTrue(\Illuminate\Support\Facades\Hash::check(DemoSeeder::PASSWORD, $admin->password));
 
         $this->actingAs($admin);
-        $this->get('/')->assertOk();
+        $this->get('/app')->assertRedirect('/app/demo');
+        $this->get('/app/demo')->assertOk();
         Livewire::test(ActiveProjects::class)->assertSee('Школа № 12');
         Livewire::test(NeedsAttention::class)->assertSee('Игорь Монтажов');
         $this->get(ProjectResource::getUrl('view', ['record' => Project::first()]))->assertOk();
@@ -69,6 +80,6 @@ class DemoSeederTest extends TestCase
 
         $foreman = User::where('email', 'foreman@demo.local')->firstOrFail();
         $this->actingAs($foreman);
-        $this->get('/')->assertOk();
+        $this->get('/app/demo')->assertOk()->assertSee('Мои расходы за месяц');
     }
 }

@@ -39,7 +39,7 @@ class InvitationController extends Controller
         if ($user->roleIn($invite->organization) !== null) {
             Registration::forgetInvitation();
 
-            return redirect('/app/'.$invite->organization->slug);
+            return new RedirectResponse(url('/app/'.$invite->organization->slug));
         }
 
         return view('invite', ['invite' => $invite, 'error' => null]);
@@ -66,6 +66,6 @@ class InvitationController extends Controller
         Registration::forgetInvitation();
         $user->forgetMemberships()->forceFill(['current_organization_id' => $invite->organization_id])->saveQuietly();
 
-        return redirect('/app/'.$invite->organization->slug);
+        return new RedirectResponse(url('/app/'.$invite->organization->slug));
     }
 }

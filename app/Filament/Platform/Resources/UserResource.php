@@ -31,7 +31,6 @@ class UserResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $q) => $q->with('organizations:id,name'))
             ->columns([
                 TextColumn::make('id')->label('№')->sortable(),
                 TextColumn::make('name')->label('Имя')->searchable(),
@@ -62,6 +61,11 @@ class UserResource extends Resource
                         Notification::make()->title("{$u->email} разблокирован")->success()->send();
                     }),
             ]);
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->with('organizations:id,name');
     }
 
     public static function canCreate(): bool

@@ -53,6 +53,10 @@ return new class extends Migration
                 }
             }
             DB::table('users')->whereNull('current_organization_id')->update(['current_organization_id' => $orgId]);
+        } else {
+            // Чистая установка: ничьих данных нет, кроме статьи «Налоги» из старой миграции — справочник
+            // теперь создаётся вместе с каждой организацией
+            DB::table('expense_categories')->whereNull('organization_id')->delete();
         }
 
         $this->rebuildSettings($orgId);
@@ -80,8 +84,9 @@ return new class extends Migration
             return $existing;
         }
 
+        // справочник статей не в счёт: старая миграция сама добавляет «Налоги» даже в пустую базу
         $hasData = DB::table('users')->exists();
-        foreach ($this->tables as $name) {
+        foreach (array_diff($this->tables, ['expense_categories']) as $name) {
             $hasData = $hasData || DB::table($name)->exists();
         }
         if (! $hasData) {

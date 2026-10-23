@@ -32,12 +32,6 @@ class OrganizationResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn (Builder $q) => $q
-                ->withCount(['memberships', 'projects', 'expenses'])
-                ->addSelect(['last_login_at' => User::query()->selectRaw('max(last_login_at)')
-                    ->join('organization_user', 'organization_user.user_id', '=', 'users.id')
-                    ->whereColumn('organization_user.organization_id', 'organizations.id')])
-                ->with('creator'))
             ->columns([
                 TextColumn::make('id')->label('№')->sortable(),
                 TextColumn::make('name')->label('Организация')->searchable(['name', 'inn', 'slug'])->wrap()
@@ -69,6 +63,17 @@ class OrganizationResource extends Resource
                         Notification::make()->title("«{$o->name}» разблокирована")->success()->send();
                     }),
             ]);
+    }
+
+    /** Счётчики — служебная сводка; суммы и названия объектов сюда не попадают */
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->withCount(['memberships', 'projects', 'expenses'])
+            ->addSelect(['last_login_at' => User::query()->selectRaw('max(last_login_at)')
+                ->join('organization_user', 'organization_user.user_id', '=', 'users.id')
+                ->whereColumn('organization_user.organization_id', 'organizations.id')])
+            ->with('creator');
     }
 
     public static function canCreate(): bool

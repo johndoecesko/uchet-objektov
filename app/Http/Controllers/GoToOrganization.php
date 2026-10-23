@@ -13,14 +13,16 @@ class GoToOrganization extends Controller
     {
         $user = $request->user();
         if (! $user) {
-            return redirect()->guest('/app/login');
+            session()->put('url.intended', $request->fullUrl());
+
+            return new RedirectResponse(url('/app/login'));
         }
 
         $org = $user->getDefaultTenant(Filament::getPanel('admin'));
         if (! $org) {
-            return redirect('/app'); // организаций нет — Filament предложит создать
+            return new RedirectResponse(url('/app')); // организаций нет — Filament предложит создать
         }
 
-        return redirect('/app/'.$org->slug.($path ? '/'.trim($path, '/') : ''));
+        return new RedirectResponse(url('/app/'.$org->slug.($path ? '/'.trim($path, '/') : '')));
     }
 }

@@ -12,6 +12,8 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 /** Сводка платформы: организации, учётные записи, регистрации, копия в облако */
 class PlatformStats extends StatsOverviewWidget
 {
+    protected static bool $isLazy = false;
+
     protected ?string $pollingInterval = null;
 
     protected function getStats(): array

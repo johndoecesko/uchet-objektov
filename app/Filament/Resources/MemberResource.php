@@ -37,7 +37,13 @@ class MemberResource extends Resource
 
     protected static bool $hasTitleCaseModelLabel = false;
 
-    public const ROLE_HINT = 'Прораб / монтажник видит объекты и вносит свои расходы и журнал работ; финансы не видит. Менеджер видит и ведёт всё, кроме настроек. Администратор — всё, включая участников.';
+    /** Подсказка к роли; название роли прораба — из UserRole (на рабочем сайте оно своё) */
+    public static function roleHint(): string
+    {
+        return UserRole::Foreman->getLabel().' видит объекты и вносит свои расходы и журнал работ; финансы не видит. '
+            .UserRole::Manager->getLabel().' видит и ведёт всё, кроме настроек и участников. '
+            .UserRole::Admin->getLabel().' — всё, включая участников.';
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -46,7 +52,7 @@ class MemberResource extends Resource
                 TextEntry::make('user.name')->label('Имя'),
                 TextEntry::make('user.email')->label('Email (логин)'),
                 Select::make('role')->label('Роль в организации')->options(UserRole::class)->required()
-                    ->helperText(self::ROLE_HINT),
+                    ->helperText(self::roleHint()),
                 Toggle::make('is_active')->label('Доступ к организации разрешён')->inline(false)
                     ->helperText('Выключите, чтобы временно закрыть доступ, не убирая из организации'),
             ]),

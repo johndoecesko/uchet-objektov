@@ -14,6 +14,7 @@ use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Support\Facades\Notification as Notifier;
+use Illuminate\Support\Js;
 
 class ListMembers extends ListRecords
 {
@@ -22,7 +23,7 @@ class ListMembers extends ListRecords
     protected function getHeaderActions(): array
     {
         $role = Select::make('role')->label('Роль')->options(UserRole::class)->default(UserRole::Foreman)->required()
-            ->helperText(MemberResource::ROLE_HINT);
+            ->helperText(MemberResource::roleHint());
 
         return [
             Action::make('inviteLink')
@@ -38,6 +39,7 @@ class ListMembers extends ListRecords
                     abort_unless(auth()->user()->isAdmin(), 403);
                     $invite = Invitation::create(['role' => $data['role']]);
                     self::linkNotification($invite)->send();
+                    $this->dispatch('invitations-changed');
                 }),
             Action::make('inviteEmail')
                 ->label('Пригласить по почте')
@@ -55,6 +57,7 @@ class ListMembers extends ListRecords
                     $invite = Invitation::create(['email' => $data['email'], 'role' => $data['role']]);
                     Notifier::route('mail', $invite->email)->notify(new OrganizationInvitation($invite, app(CurrentOrganization::class)->get(), auth()->user()));
                     Notification::make()->title('Приглашение отправлено на '.$invite->email)->success()->send();
+                    $this->dispatch('invitations-changed');
                 }),
         ];
     }
@@ -71,7 +74,8 @@ class ListMembers extends ListRecords
             ->success()
             ->actions([
                 Action::make('copy')->label('Скопировать')->button()
-                    ->alpineClickHandler('window.navigator.clipboard.writeText('.json_encode($url).'); $tooltip(\'Скопировано\', { timeout: 1500 })'),
+                    // Js::from — строка в одинарных кавычках, не ломает HTML-атрибут
+                    ->alpineClickHandler('window.navigator.clipboard.writeText('.Js::from($url).'); $tooltip(\'Скопировано\', { timeout: 1500 })'),
             ]);
     }
 

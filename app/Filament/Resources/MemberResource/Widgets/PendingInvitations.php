@@ -9,6 +9,7 @@ use Filament\Actions\DeleteAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
+use Livewire\Attributes\On;
 
 /** Приглашения, которые ещё не приняты: ссылку можно показать снова или отозвать */
 class PendingInvitations extends TableWidget
@@ -16,6 +17,10 @@ class PendingInvitations extends TableWidget
     protected int | string | array $columnSpan = 'full';
 
     protected static bool $isDiscovered = false;
+
+    /** Новое приглашение со страницы «Участники» — перерисовать список */
+    #[On('invitations-changed')]
+    public function refreshInvitations(): void {}
 
     public static function canView(): bool
     {

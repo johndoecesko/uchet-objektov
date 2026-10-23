@@ -3,9 +3,15 @@
 namespace Tests\Feature;
 
 use App\Enums\ExpenseSource;
+use App\Enums\OrganizationStatus;
 use App\Enums\PaymentSource;
+use App\Enums\UserRole;
 use App\Models\Activity;
 use App\Models\Expense;
+use App\Models\ExpenseCategory;
+use App\Models\Organization;
+use App\Models\Project;
+use App\Support\CurrentOrganization;
 use App\Support\Max\MaxBot;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\Request;
@@ -212,6 +218,95 @@ class MaxBotTest extends TestCase
         $this->assertNull(MaxBot::parseAmount('0'));
         $this->assertNull(MaxBot::parseAmount('12,345'));
         $this->assertNull(MaxBot::parseAmount('abc'));
+    }
+
+    /** Вторая организация со своим объектом; бот работает вне панели — тенант Filament снимаем */
+    private function secondOrganization(): array
+    {
+        $orgB = Organization::create(['name' => 'ИП Второй', 'slug' => 'vtoroy']);
+        $projectB = app(CurrentOrganization::class)->run($orgB, fn () => Project::create(['name' => 'Объект Б', 'contract_amount' => 1, 'status' => 'active']));
+        $this->useOrganization(null);
+
+        return [$orgB, $projectB];
+    }
+
+    private function photo(): array
+    {
+        return $this->text('', [['type' => 'image', 'payload' => ['url' => 'https://files.max.test/p.jpg']]]);
+    }
+
+    public function test_user_in_two_organizations_chooses_one_and_expense_goes_there(): void
+    {
+        [$orgB, $projectB] = $this->secondOrganization();
+        $orgB->addMember($this->foreman, UserRole::Foreman);
+        $this->foreman->forceFill(['max_user_id' => self::MAX_ID])->save();
+        $catA = ExpenseCategory::acrossOrganizations()->where('organization_id', $this->org->id)->where('name', 'like', 'Материалы%')->first();
+        $catB = ExpenseCategory::acrossOrganizations()->where('organization_id', $orgB->id)->where('name', 'like', 'Материалы%')->first();
+
+        $this->hook($this->photo())->assertOk();
+        $reply = $this->lastReply();
+        $this->assertStringContainsString('В какую организацию', $reply['text']);
+        $this->assertEqualsCanonicalizing(['o:'.$this->org->id, 'o:'.$orgB->id], array_column($this->buttons($reply), 'payload'));
+
+        $this->hook($this->press('o:'.$orgB->id))->assertOk();
+        $reply = $this->lastReply();
+        $this->assertStringContainsString('«ИП Второй». На какой объект', $reply['text']);
+        $this->assertSame(['p:'.$projectB->id], array_column($this->buttons($reply), 'payload'), 'объекты только выбранной организации');
+
+        $this->hook($this->press('p:'.$this->project->id))->assertOk(); // объект другой организации не принимается
+        $this->assertStringContainsString('На какой объект', $this->lastReply()['text']);
+        $this->hook($this->text('Школа'))->assertOk();                   // и по названию не находится
+        $this->assertStringContainsString('Не нашёл объект', $this->lastReply()['text']);
+
+        $this->hook($this->press('p:'.$projectB->id))->assertOk();
+        $this->hook($this->text('300'))->assertOk();
+        $payloads = array_column($this->buttons($this->lastReply()), 'payload');
+        $this->assertContains('c:'.$catB->id, $payloads);
+        $this->assertNotContains('c:'.$catA->id, $payloads);
+
+        $this->hook($this->press('c:'.$catA->id))->assertOk();          // статья чужой организации не принимается
+        $this->assertSame(0, Expense::acrossOrganizations()->count(), 'расход не создан');
+        $this->hook($this->press('c:'.$catB->id))->assertOk();
+
+        $e = Expense::acrossOrganizations()->latest('id')->first();
+        $this->assertSame($orgB->id, $e->organization_id);
+        $this->assertSame($projectB->id, $e->project_id);
+        $this->assertSame($this->foreman->id, $e->created_by);
+        $this->assertStringStartsWith('receipts/'.$orgB->id.'/', $e->attachments[0]);
+        $this->assertStringEndsWith('/app/vtoroy/expenses/'.$e->id.'/edit', $this->buttons($this->lastReply())[0]['url']);
+
+        // выбор запомнен: следующий чек — сразу объект во второй организации
+        $this->hook($this->photo())->assertOk();
+        $this->assertSame(['p:'.$projectB->id], array_column($this->buttons($this->lastReply()), 'payload'));
+        $this->hook($this->text('сменить организацию'))->assertOk();
+        $this->assertStringContainsString('В какую организацию', $this->lastReply()['text']);
+    }
+
+    public function test_user_in_one_organization_cannot_reach_other_organization_project(): void
+    {
+        [, $projectB] = $this->secondOrganization();
+        $this->foreman->forceFill(['max_user_id' => self::MAX_ID])->save();
+
+        $this->hook($this->photo())->assertOk();
+        $payloads = array_column($this->buttons($this->lastReply()), 'payload');
+        $this->assertContains('p:'.$this->project->id, $payloads);
+        $this->assertNotContains('p:'.$projectB->id, $payloads);
+
+        $this->hook($this->press('p:'.$projectB->id))->assertOk();
+        $this->assertStringContainsString('На какой объект', $this->lastReply()['text']);
+        $this->hook($this->text('Объект Б'))->assertOk();
+        $this->assertStringContainsString('Не нашёл объект', $this->lastReply()['text']);
+    }
+
+    public function test_blocked_organization_is_not_offered(): void
+    {
+        $this->foreman->forceFill(['max_user_id' => self::MAX_ID])->save();
+        $this->org->update(['status' => OrganizationStatus::Blocked]);
+        $this->useOrganization(null);
+
+        $this->hook($this->photo())->assertOk();
+        $this->assertStringContainsString('не состоит ни в одной действующей организации', $this->lastReply()['text']);
+        $this->assertSame(0, Expense::acrossOrganizations()->count());
     }
 
     public function test_user_menu_has_link_action(): void

@@ -155,7 +155,7 @@
                 @if ($open)
                     <a class="btn" href="/app/register">Зарегистрироваться</a>
                 @else
-                    <a class="btn" href="mailto:{{ config('app.support_email') }}?subject={{ rawurlencode('Учёт объектов: доступ') }}">Попросить доступ</a>
+                    <a class="btn" href="mailto:{{ config('app.support_email') }}?subject={{ rawurlencode('Финпрораб: доступ') }}">Попросить доступ</a>
                 @endif
             @endauth
         </div>

@@ -25,13 +25,13 @@ class OrganizationInvitation extends Notification implements ShouldQueue
     public function toMail(object $notifiable): MailMessage
     {
         return (new MailMessage)
-            ->subject("Приглашение в «{$this->organization->name}» — Учёт объектов")
+            ->subject("Приглашение в «{$this->organization->name}» — Финпрораб")
             ->greeting('Здравствуйте!')
-            ->line("{$this->inviter->name} приглашает вас в организацию «{$this->organization->name}» в сервисе «Учёт объектов». Роль: {$this->invitation->role->getLabel()}.")
+            ->line("{$this->inviter->name} приглашает вас в организацию «{$this->organization->name}» в сервисе «Финпрораб — учёт объектов». Роль: {$this->invitation->role->getLabel()}.")
             ->line('В сервисе ведут учёт по монтажным объектам: расходы с фото чеков, журнал работ, выплаты и подотчёт.')
             ->action('Принять приглашение', $this->invitation->url())
             ->line('Ссылка действует до '.$this->invitation->expires_at->format('d.m.Y H:i').' и сработает один раз.')
             ->line('Если вы не ждали этого письма, просто не отвечайте на него.')
-            ->salutation('С уважением, «Учёт объектов»');
+            ->salutation('С уважением, Финпрораб');
     }
 }

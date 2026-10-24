@@ -31,7 +31,7 @@ class PlatformPanelProvider extends PanelProvider
             ->id('platform')
             ->path('platform')
             ->login(Login::class)
-            ->brandName('Учёт объектов · платформа')
+            ->brandName('Финпрораб · платформа')
             ->favicon(asset('icons/favicon-32.png'))
             ->colors(['primary' => Color::Slate])
             ->maxContentWidth('full')

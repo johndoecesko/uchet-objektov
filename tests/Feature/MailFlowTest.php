@@ -49,7 +49,7 @@ class MailFlowTest extends TestCase
             $mail = $n->toMail($user);
             $url = $n->url;
 
-            return $mail->subject === 'Подтвердите почту — Учёт объектов' && $mail->actionUrl === $n->url;
+            return $mail->subject === 'Подтвердите почту — Финпрораб' && $mail->actionUrl === $n->url;
         });
 
         // без подтверждения даже организацию не создать
@@ -106,7 +106,7 @@ class MailFlowTest extends TestCase
         Notification::assertSentTo($this->admin, ResetPassword::class, function (ResetPassword $n) use (&$sent) {
             $sent = $n;
 
-            return $n->toMail($this->admin)->subject === 'Сброс пароля — Учёт объектов';
+            return $n->toMail($this->admin)->subject === 'Сброс пароля — Финпрораб';
         });
         $this->assertStringContainsString('/app/password-reset/reset', $sent->url);
 
@@ -183,7 +183,7 @@ class MailFlowTest extends TestCase
             $url = $n->url;
 
             return $to->routes['mail'] === 'new-admin@test.ru'
-                && $n->toMail($to)->subject === 'Подтвердите новую почту — Учёт объектов';
+                && $n->toMail($to)->subject === 'Подтвердите новую почту — Финпрораб';
         });
 
         $this->get($url)->assertRedirect();
@@ -202,6 +202,7 @@ class MailFlowTest extends TestCase
 
     public function test_letters_are_russian_without_english_template_lines(): void
     {
+        config(['app.name' => 'Финпрораб — учёт объектов']); // шапка письма — APP_NAME, как на сервере
         $reset = app(\Filament\Auth\Notifications\ResetPassword::class, ['token' => 't']);
         $this->assertInstanceOf(ResetPassword::class, $reset, 'Filament берёт наше письмо из контейнера');
         $reset->url = 'https://finprorab.ru/app/password-reset/reset?token=t';
@@ -216,7 +217,7 @@ class MailFlowTest extends TestCase
 
         foreach ($letters as $mail) {
             $html = (string) $mail->render();
-            $this->assertStringContainsString('Учёт объектов', $html);
+            $this->assertStringContainsString('Финпрораб', $html);
             $this->assertStringContainsString('Если кнопка «', $html);
             $this->assertStringContainsString('Все права защищены.', $html);
             foreach (['Hello', 'Regards', 'trouble clicking', 'All rights reserved', 'Laravel'] as $english) {

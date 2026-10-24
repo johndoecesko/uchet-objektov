@@ -53,7 +53,10 @@ class AdminPanelProvider extends PanelProvider
             ->tenantProfile(EditOrganizationProfile::class)
             ->tenantMiddleware([EnsureOrganizationIsActive::class], isPersistent: true)
             ->searchableTenantMenu(false)
-            ->brandName('Учёт объектов')
+            // Название: «Финпрораб» — торговая марка, «Учёт объектов» — что это за программа
+            ->brandName('Финпрораб')
+            ->brandLogo(fn () => view('filament.brand'))
+            ->brandLogoHeight('2.5rem')
             ->favicon(asset('icons/favicon-32.png'))
             // PWA: устанавливается на телефон как приложение (Chrome → «Установить приложение»)
             ->renderHook(PanelsRenderHook::HEAD_END, fn (): HtmlString => new HtmlString(
@@ -61,7 +64,7 @@ class AdminPanelProvider extends PanelProvider
                 .'<meta name="theme-color" content="#2563eb">'
                 .'<meta name="mobile-web-app-capable" content="yes">'
                 .'<meta name="apple-mobile-web-app-capable" content="yes">'
-                .'<meta name="apple-mobile-web-app-title" content="Учёт">'
+                .'<meta name="apple-mobile-web-app-title" content="Финпрораб">'
                 .'<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">'
             ))
             // Вход и регистрация через Яндекс ID / VK ID — под формой (кнопки есть, только если заданы ключи)

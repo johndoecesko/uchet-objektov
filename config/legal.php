@@ -16,6 +16,7 @@ return [
     'operator' => [
         'name' => env('LEGAL_OPERATOR_NAME'),        // «Индивидуальный предприниматель Иванов Иван Иванович» / «ООО «…»»
         'short' => env('LEGAL_OPERATOR_SHORT'),      // «ИП Иванов И. И.»
+        'dative' => env('LEGAL_OPERATOR_DATIVE'),    // «индивидуальному предпринимателю Иванову Ивану Ивановичу» — для «даю согласие кому»
         'inn' => env('LEGAL_OPERATOR_INN'),
         'ogrn' => env('LEGAL_OPERATOR_OGRN'),        // ОГРН или ОГРНИП
         'address' => env('LEGAL_OPERATOR_ADDRESS'),

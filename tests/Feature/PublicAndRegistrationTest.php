@@ -56,14 +56,16 @@ class PublicAndRegistrationTest extends TestCase
             ->assertSee('[заполнить: ИНН]')
             ->assertSee('Черновик.');
         $this->get('/terms')->assertOk()->assertSee('Пользовательское соглашение')->assertSee('[заполнить: ИНН]');
+        $this->get('/consent')->assertOk()->assertSee('Согласие на обработку персональных данных')->assertSee('ООО «Регистратор доменных имен РЕГ.РУ»');
 
         config(['legal.draft' => false, 'legal.operator' => [
-            'name' => 'ИП Тестов Тест Тестович', 'short' => 'ИП Тестов Т. Т.', 'inn' => '123456789012',
+            'name' => 'ИП Тестов Тест Тестович', 'short' => 'ИП Тестов Т. Т.', 'dative' => 'индивидуальному предпринимателю Тестову Тесту Тестовичу', 'inn' => '123456789012',
             'ogrn' => '312345678901234', 'address' => 'г. Саратов', 'email' => 'pd@test.ru',
         ]]);
-        foreach (['/privacy', '/terms'] as $url) {
+        $this->get('/consent')->assertOk()->assertSee('даю согласие индивидуальному предпринимателю Тестову Тесту Тестовичу (ИП Тестов Т. Т.), ИНН 123456789012');
+        foreach (['/privacy', '/terms', '/consent'] as $url) {
             $this->get($url)->assertOk()
-                ->assertSee('ИП Тестов Тест Тестович')->assertSee('123456789012')->assertSee('mailto:pd@test.ru', false)
+                ->assertSee('ИП Тестов Т. Т.')->assertSee('123456789012')->assertSee('mailto:pd@test.ru', false)
                 ->assertDontSee('[заполнить')->assertDontSee('Черновик.');
         }
     }
@@ -78,7 +80,7 @@ class PublicAndRegistrationTest extends TestCase
         $this->assertNull(User::where('email', 'new@test.ru')->first());
 
         Livewire::test(Register::class)
-            ->assertSee('Пользовательское соглашение')->assertSee('Политики обработки персональных данных')
+            ->assertSee('Пользовательское соглашение')->assertSee('согласие на обработку персональных данных')->assertSee(route('consent'), false)
             ->fillForm(self::FORM)->call('register')->assertHasNoFormErrors();
         $user = User::where('email', 'new@test.ru')->firstOrFail();
         $this->assertNotNull($user->consent_at);

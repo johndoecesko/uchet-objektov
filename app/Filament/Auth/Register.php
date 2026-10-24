@@ -80,7 +80,7 @@ class Register extends BaseRegister
             : $field;
     }
 
-    /** Две отметки: согласие на обработку ПДн по 152-ФЗ оформляется отдельно от прочих условий */
+    /** Две отметки: согласие на обработку ПДн — отдельный документ без прочих условий (ч. 1 ст. 9 152-ФЗ в ред. 156-ФЗ) */
     protected function getConsentFormComponents(): array
     {
         return [
@@ -90,7 +90,7 @@ class Register extends BaseRegister
                 ->validationMessages(['accepted' => 'Без согласия с Пользовательским соглашением зарегистрироваться нельзя.'])
                 ->dehydrated(false),
             Checkbox::make('consent')
-                ->label(new HtmlString('Даю согласие на обработку персональных данных на условиях <a href="'.e(route('privacy')).'" target="_blank" class="underline">Политики обработки персональных данных</a>'))
+                ->label(new HtmlString('Даю <a href="'.e(route('consent')).'" target="_blank" class="underline">согласие на обработку персональных данных</a>'))
                 ->accepted()
                 ->validationMessages(['accepted' => 'Без согласия на обработку персональных данных зарегистрироваться нельзя.'])
                 ->dehydrated(false),

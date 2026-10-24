@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Route;
 Route::view('/', 'landing')->name('home');
 Route::view('/privacy', 'legal.privacy')->name('privacy');
 Route::view('/terms', 'legal.terms')->name('terms');
+Route::view('/consent', 'legal.consent')->name('consent');
 
 // «В мою организацию»: /go/expenses/create → /app/{организация}/expenses/create (ярлыки PWA, старые ссылки)
 Route::get('/go/{path?}', GoToOrganization::class)->where('path', '[a-z0-9\-/]*')->name('go');

@@ -1,6 +1,7 @@
 @extends('layouts.simple')
 
 @section('title', 'Завершение регистрации — Финпрораб')
+@section('robots', 'noindex, nofollow')
 
 @section('style')
     .complete { max-width: 520px; margin: 48px auto; }

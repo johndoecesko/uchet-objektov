@@ -1,6 +1,7 @@
 @extends('layouts.simple')
 
 @section('title', 'Приглашение — Финпрораб')
+@section('robots', 'noindex, nofollow')
 
 @section('style')
     .invite { max-width: 520px; margin: 48px auto; }

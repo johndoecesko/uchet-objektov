@@ -8,6 +8,8 @@
     <link rel="icon" href="/icons/favicon-32.png">
     <link rel="manifest" href="/manifest.json">
     <meta name="theme-color" content="#2563eb">
+    @include('partials.seo-head')
+    @stack('head')
     <style>
         :root { --blue: #2563eb; --blue-dark: #1d4ed8; --text: #0f172a; --muted: #475569; --line: #e2e8f0; --bg: #f8fafc; }
         * { box-sizing: border-box; }
@@ -44,9 +46,11 @@
         <span>© {{ date('Y') }} Финпрораб — учёт объектов</span>
         <span>
             @if (\Illuminate\Support\Facades\Route::has('privacy'))<a href="{{ route('privacy') }}">Политика обработки персональных данных</a> · <a href="{{ route('terms') }}">Пользовательское соглашение</a> · @endif
+            @if (config('services.yandex_metrika.id') && request()->routeIs('home', 'install', 'privacy', 'terms', 'consent'))<a href="#" onclick="cookieSettings(); return false">Настройки cookie</a> · @endif
             Связь: <a href="https://t.me/{{ ltrim(config('app.support_telegram'), '@') }}">{{ config('app.support_telegram') }}</a>, <a href="mailto:{{ config('app.support_email') }}">{{ config('app.support_email') }}</a>
         </span>
     </div>
 </footer>
+@include('partials.metrika')
 </body>
 </html>

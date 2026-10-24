@@ -60,7 +60,8 @@ class AdminPanelProvider extends PanelProvider
             ->favicon(asset('icons/favicon-32.png'))
             // PWA: устанавливается на телефон как приложение (Chrome → «Установить приложение»)
             ->renderHook(PanelsRenderHook::HEAD_END, fn (): HtmlString => new HtmlString(
-                '<link rel="manifest" href="/manifest.json">'
+                '<meta name="robots" content="noindex, nofollow">'
+                .'<link rel="manifest" href="/manifest.json">'
                 .'<meta name="theme-color" content="#2563eb">'
                 .'<meta name="mobile-web-app-capable" content="yes">'
                 .'<meta name="apple-mobile-web-app-capable" content="yes">'

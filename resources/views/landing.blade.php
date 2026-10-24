@@ -1,7 +1,22 @@
 @extends('layouts.simple')
 
 @section('title', 'Финпрораб — учёт денег по монтажным объектам без Excel')
-@section('description', 'Финпрораб — бесплатный сервис учёта объектов для монтажных организаций: бюджет и расходы по объектам, фото чеков, журнал работ и зарплата, подотчёт, поступления от заказчика, прогноз прибыли.')
+@section('description', 'Бесплатный учёт денег по объектам для монтажных и строительных компаний: бюджет и расходы, фото чеков, журнал работ и зарплата, подотчёт, оплаты заказчика, прогноз прибыли.')
+
+@push('head')
+    <script type="application/ld+json">{!! json_encode([
+        '@context' => 'https://schema.org',
+        '@type' => 'WebApplication',
+        'name' => 'Финпрораб — учёт объектов',
+        'url' => url('/'),
+        'applicationCategory' => 'BusinessApplication',
+        'operatingSystem' => 'Web, Android, iOS',
+        'inLanguage' => 'ru',
+        'description' => 'Учёт денег по монтажным и строительным объектам: бюджет по статьям, расходы с фото чеков, журнал работ и зарплата, подотчёт, оплаты заказчика, план/факт и прогноз прибыли.',
+        'offers' => ['@type' => 'Offer', 'price' => '0', 'priceCurrency' => 'RUB'],
+        'screenshot' => url('/img/landing/01-dashboard.png'),
+    ], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) !!}</script>
+@endpush
 
 @php($open = \App\Support\Registration::open())
 

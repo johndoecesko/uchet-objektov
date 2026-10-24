@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\GoToOrganization;
 use App\Http\Controllers\InvitationController;
+use App\Http\Controllers\SeoController;
 use App\Http\Controllers\SocialAuthController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,6 +16,8 @@ Route::view('/privacy', 'legal.privacy')->name('privacy');
 Route::view('/terms', 'legal.terms')->name('terms');
 Route::view('/consent', 'legal.consent')->name('consent');
 Route::view('/install', 'install')->name('install');
+Route::get('/robots.txt', [SeoController::class, 'robots']);
+Route::get('/sitemap.xml', [SeoController::class, 'sitemap']);
 
 // «В мою организацию»: /go/expenses/create → /app/{организация}/expenses/create (ярлыки PWA, старые ссылки)
 Route::get('/go/{path?}', GoToOrganization::class)->where('path', '[a-z0-9\-/]*')->name('go');

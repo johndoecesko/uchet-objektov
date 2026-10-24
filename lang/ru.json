@@ -3,5 +3,13 @@
     "Whoops!": "Ошибка!",
     "Regards,": "С уважением,",
     "If you're having trouble clicking the \":actionText\" button, copy and paste the URL below\ninto your web browser:": "Если кнопка «:actionText» не открывается, скопируйте ссылку ниже\nи вставьте её в адресную строку браузера:",
-    "All rights reserved.": "Все права защищены."
+    "All rights reserved.": "Все права защищены.",
+    "Not Found": "Страница не найдена",
+    "Forbidden": "Доступ запрещён",
+    "Unauthorized": "Нужно войти",
+    "Page Expired": "Страница устарела — обновите её",
+    "Payment Required": "Требуется оплата",
+    "Server Error": "Ошибка сервера",
+    "Service Unavailable": "Идут технические работы, зайдите через несколько минут",
+    "Too Many Requests": "Слишком много запросов, подождите немного"
 }

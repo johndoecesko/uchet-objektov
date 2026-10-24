@@ -48,6 +48,12 @@ return [
         'service_token' => env('VKID_SERVICE_TOKEN'),
     ],
 
+    // Яндекс Метрика (только публичные страницы и только с согласия на cookie) и подтверждение прав в Яндекс Вебмастере
+    'yandex_metrika' => [
+        'id' => env('YANDEX_METRIKA_ID'),
+    ],
+    'yandex_verification' => env('YANDEX_VERIFICATION'),
+
     // Бот в MAX для чеков (https://dev.max.ru). Токен — от @MasterBot, секрет вебхука — любая строка A-Z a-z 0-9 _ -
     'max' => [
         'token' => env('MAX_BOT_TOKEN'),

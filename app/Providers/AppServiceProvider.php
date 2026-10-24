@@ -11,6 +11,7 @@ use App\Support\CurrentOrganization;
 use Filament\Auth\Notifications as FilamentAuth;
 use Filament\Events\TenantSet;
 use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Contracts\Validation\UncompromisedVerifier;
 use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Support\Facades\Event;
@@ -57,6 +58,13 @@ class AppServiceProvider extends ServiceProvider
             if ($user instanceof User && $org instanceof Organization && (int) $user->current_organization_id !== (int) $org->getKey()) {
                 User::whereKey($user->getKey())->update(['current_organization_id' => $org->getKey()]);
                 $user->current_organization_id = $org->getKey();
+            }
+        });
+
+        // Пароль задан через «Забыли пароль?» — учётка из соцсети теперь может входить и по паролю
+        Event::listen(PasswordReset::class, function (PasswordReset $event) {
+            if ($event->user instanceof User && ! $event->user->has_password) {
+                $event->user->forceFill(['has_password' => true])->save();
             }
         });
 

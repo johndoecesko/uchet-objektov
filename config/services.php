@@ -36,6 +36,18 @@ return [
         'url' => env('SMARTCAPTCHA_URL', 'https://smartcaptcha.cloud.yandex.ru/validate'),
     ],
 
+    // Вход через Яндекс ID (https://oauth.yandex.ru) и VK ID (https://id.vk.ru/about/business). Без ключей кнопок нет.
+    // Redirect URI в приложениях: https://<домен>/auth/yandex/callback и https://<домен>/auth/vkid/callback
+    'yandex' => [
+        'client_id' => env('YANDEX_CLIENT_ID'),
+        'client_secret' => env('YANDEX_CLIENT_SECRET'),
+    ],
+    'vkid' => [
+        'client_id' => env('VKID_CLIENT_ID'),
+        // сервисный ключ — только для «конфиденциального» приложения VK ID
+        'service_token' => env('VKID_SERVICE_TOKEN'),
+    ],
+
     // Бот в MAX для чеков (https://dev.max.ru). Токен — от @MasterBot, секрет вебхука — любая строка A-Z a-z 0-9 _ -
     'max' => [
         'token' => env('MAX_BOT_TOKEN'),

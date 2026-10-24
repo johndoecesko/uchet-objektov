@@ -31,7 +31,7 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
 
     protected $hidden = ['password', 'remember_token'];
 
-    protected $attributes = ['is_active' => true];
+    protected $attributes = ['is_active' => true, 'has_password' => true];
 
     /** Членства по организациям в пределах запроса: [organization_id => Membership|null] */
     private array $membershipCache = [];
@@ -50,6 +50,7 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
             'password' => 'hashed',
             'is_active' => 'boolean',
             'is_platform_admin' => 'boolean',
+            'has_password' => 'boolean',
             'max_user_id' => 'integer',
         ];
     }
@@ -148,6 +149,17 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
         return $orgs->firstWhere('id', $this->current_organization_id)
             ?? $orgs->first(fn (Organization $o) => ! $o->isBlocked())
             ?? $orgs->first();
+    }
+
+    public function socialAccounts(): HasMany
+    {
+        return $this->hasMany(SocialAccount::class);
+    }
+
+    /** Сколько способов входа: пароль + привязанные Яндекс/VK. Последний не отвязать */
+    public function loginMethodsCount(): int
+    {
+        return ($this->has_password ? 1 : 0) + $this->socialAccounts()->count();
     }
 
     /** Сотрудник этого пользователя в текущей организации */

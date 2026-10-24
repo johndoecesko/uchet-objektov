@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\GoToOrganization;
 use App\Http\Controllers\InvitationController;
+use App\Http\Controllers\SocialAuthController;
 use Illuminate\Support\Facades\Route;
 
 // Учёт — панель Filament на /app (App\Providers\Filament\AdminPanelProvider), организация в адресе: /app/{slug}/…
@@ -28,3 +29,11 @@ Route::get('/{section}/{rest?}', fn (string $section, ?string $rest = null) => r
 // Приглашение в организацию: ссылка подписанная, 7 дней, одноразовая
 Route::get('/invite/{invitation}', [InvitationController::class, 'show'])->name('invite.show');
 Route::post('/invite/{invitation}', [InvitationController::class, 'accept'])->middleware('auth')->name('invite.accept');
+
+// Вход через Яндекс ID и VK ID (App\Support\Social). Без ключей — 404
+Route::middleware('throttle:30,1')->group(function () {
+    Route::get('/auth/{provider}/redirect', [SocialAuthController::class, 'redirect'])->whereIn('provider', ['yandex', 'vkid'])->name('social.redirect');
+    Route::get('/auth/{provider}/callback', [SocialAuthController::class, 'callback'])->whereIn('provider', ['yandex', 'vkid'])->name('social.callback');
+    Route::get('/auth/complete', [SocialAuthController::class, 'completeForm'])->name('social.complete');
+    Route::post('/auth/complete', [SocialAuthController::class, 'complete'])->middleware('throttle:10,1')->name('social.complete.store');
+});

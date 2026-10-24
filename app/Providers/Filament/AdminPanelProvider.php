@@ -63,6 +63,9 @@ class AdminPanelProvider extends PanelProvider
                 .'<meta name="apple-mobile-web-app-title" content="Учёт">'
                 .'<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">'
             ))
+            // Вход и регистрация через Яндекс ID / VK ID — под формой (кнопки есть, только если заданы ключи)
+            ->renderHook(PanelsRenderHook::AUTH_LOGIN_FORM_AFTER, fn () => view('filament.social-buttons', ['label' => 'Войти']))
+            ->renderHook(PanelsRenderHook::AUTH_REGISTER_FORM_AFTER, fn () => view('filament.social-buttons', ['label' => 'Зарегистрироваться']))
             ->renderHook(PanelsRenderHook::BODY_END, fn (): HtmlString => new HtmlString(
                 "<script>if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js')); }</script>"
             ))

@@ -11,9 +11,12 @@ use App\Support\CurrentOrganization;
 use Filament\Auth\Notifications as FilamentAuth;
 use Filament\Events\TenantSet;
 use Illuminate\Auth\Events\Login;
+use Illuminate\Contracts\Validation\UncompromisedVerifier;
+use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\NotPwnedVerifier;
 use Illuminate\Validation\Rules\Password;
 
 class AppServiceProvider extends ServiceProvider
@@ -25,6 +28,9 @@ class AppServiceProvider extends ServiceProvider
     {
         // Текущая организация — своя на каждый запрос и каждую задачу очереди
         $this->app->scoped(CurrentOrganization::class);
+
+        // Проверка пароля по утечкам: ждём ответа не дольше 5 секунд, а не 30 по умолчанию
+        $this->app->extend(UncompromisedVerifier::class, fn ($verifier, $app) => new NotPwnedVerifier($app[HttpFactory::class], 5));
 
         // Письма входа — свои, на русском (Filament берёт их из контейнера)
         $this->app->bind(FilamentAuth\VerifyEmail::class, Auth\VerifyEmail::class);
@@ -40,8 +46,9 @@ class AppServiceProvider extends ServiceProvider
         // Модель истории изменений лежит в пакете — политику регистрируем явно
         Gate::policy(Activity::class, ActivityPolicy::class);
 
-        // Пароль — от 8 символов (регистрация, сброс, профиль)
-        Password::defaults(fn () => Password::min(8)->max(100));
+        // Пароль — от 8 символов (регистрация, сброс, профиль). На сервере — ещё и не из утечек (api.pwnedpasswords.com
+        // получает только 5 первых знаков хеша; сервис недоступен — проверка пропускается)
+        Password::defaults(fn () => app()->isProduction() ? Password::min(8)->max(100)->uncompromised() : Password::min(8)->max(100));
 
         // Последняя открытая организация — она откроется по умолчанию (и по ярлыкам /go/…)
         Event::listen(TenantSet::class, function (TenantSet $event) {

@@ -15,11 +15,15 @@ use App\Notifications\OrganizationInvitation;
 use Filament\Auth\Notifications\NoticeOfEmailChangeRequest;
 use Filament\Auth\Pages\PasswordReset\ResetPassword as ResetPasswordPage;
 use Filament\Facades\Filament;
+use Illuminate\Contracts\Validation\UncompromisedVerifier;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Notifications\AnonymousNotifiable;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
+use Illuminate\Validation\Rules\Password;
 use Livewire\Livewire;
+use ReflectionProperty;
 use Tests\Feature\Concerns\SeedsAccounting;
 use Tests\TestCase;
 
@@ -169,6 +173,16 @@ class MailFlowTest extends TestCase
 
         $this->get($url)->assertRedirect();
         $this->assertSame('new-admin@test.ru', $this->admin->fresh()->email);
+    }
+
+    public function test_leaked_password_check_waits_at_most_5_seconds_and_says_it_in_russian(): void
+    {
+        $verifier = app(UncompromisedVerifier::class);
+        $this->assertSame(5, (new ReflectionProperty($verifier, 'timeout'))->getValue($verifier));
+
+        Http::fake(['api.pwnedpasswords.com/*' => Http::response(strtoupper(substr(sha1('Str0ng-pass!'), 5)).':12')]);
+        $v = validator(['password' => 'Str0ng-pass!'], ['password' => [Password::min(8)->uncompromised()]]);
+        $this->assertSame('Такой пароль встречался в утечках баз данных — придумайте другой.', $v->errors()->first('password'));
     }
 
     public function test_letters_are_russian_without_english_template_lines(): void

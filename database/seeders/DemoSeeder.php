@@ -30,7 +30,7 @@ use Illuminate\Support\Carbon;
  * Входы (пароль у всех — demo12345):
  *   admin@demo.local    — администратор
  *   manager@demo.local  — менеджер / бухгалтер
- *   foreman@demo.local  — прораб / монтажник
+ *   foreman@demo.local  — прораб / инженер
  */
 class DemoSeeder extends Seeder
 {

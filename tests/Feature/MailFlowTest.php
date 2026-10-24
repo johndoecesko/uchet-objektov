@@ -151,6 +151,21 @@ class MailFlowTest extends TestCase
         Notification::assertNothingSent();
     }
 
+    public function test_profile_page_opens_from_user_menu(): void
+    {
+        // профиль — вне адреса организации (/app/profile); меню организаций при этом показывает текущую
+        $this->useOrganization(null);
+        $this->actingAs($this->admin)->get('/app/profile')->assertOk()->assertSee('a@test.ru')->assertSee('ООО «Монтаж»');
+    }
+
+    public function test_profile_without_organization_leads_to_creating_one(): void
+    {
+        $this->useOrganization(null);
+        $loner = User::create(['name' => 'Один', 'email' => 'one@test.ru', 'password' => 'secret123']);
+        $loner->forceFill(['email_verified_at' => now()])->save();
+        $this->actingAs($loner)->get('/app/profile')->assertRedirect('/app/new');
+    }
+
     public function test_email_change_takes_effect_only_after_link_from_new_address(): void
     {
         Notification::fake();

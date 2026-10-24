@@ -6,7 +6,6 @@ use App\Enums\ProjectStatus;
 use App\Models\Project;
 use App\Support\Xlsx;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Carbon;
 
 /**
@@ -23,7 +22,7 @@ class OwnerReport
         return 'sobstvenniku-'.$this->from->format('Y-m-d').'-'.$this->until->format('Y-m-d').'.xlsx';
     }
 
-    /** @return Collection<int, Project> */
+    /** @return \Illuminate\Database\Eloquent\Collection<int, Project> */
     public function projects()
     {
         $period = fn (Builder $q) => $q->whereDate('date', '>=', $this->from)->whereDate('date', '<=', $this->until);

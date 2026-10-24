@@ -3,20 +3,21 @@
 namespace App\Filament\Widgets;
 
 use App\Filament\Resources\ActivityResource;
-use App\Models\Activity;
+use App\Models\Employee;
 use App\Models\Project;
 use App\Models\ProjectBudget;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Activity;
 
 /** История изменений одной записи (объекта — вместе с его планом по статьям) — внизу страницы просмотра */
 class RecordHistory extends TableWidget
 {
     public ?Model $record = null;
 
-    protected int|string|array $columnSpan = 'full';
+    protected int | string | array $columnSpan = 'full';
 
     protected static bool $isDiscovered = false;
 

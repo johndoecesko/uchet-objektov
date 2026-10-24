@@ -3,7 +3,9 @@
 namespace App\Filament\Resources\EmployeeResource\RelationManagers;
 
 use App\Filament\Resources\ExpenseResource;
-use App\Filament\Support\Fields;
+use Filament\Actions\CreateAction;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
@@ -30,7 +32,7 @@ class AdvanceExpensesRelationManager extends RelationManager
     {
         return $table
             ->columns(ExpenseResource::tableColumns())
-            ->filters([Fields::periodFilter()])
+            ->filters([\App\Filament\Support\Fields::periodFilter()])
             ->defaultSort('date', 'desc');
     }
 }

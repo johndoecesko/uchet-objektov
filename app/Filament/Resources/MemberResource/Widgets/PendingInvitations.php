@@ -14,7 +14,7 @@ use Livewire\Attributes\On;
 /** Приглашения, которые ещё не приняты: ссылку можно показать снова или отозвать */
 class PendingInvitations extends TableWidget
 {
-    protected int|string|array $columnSpan = 'full';
+    protected int | string | array $columnSpan = 'full';
 
     protected static bool $isDiscovered = false;
 

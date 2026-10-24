@@ -23,7 +23,7 @@ class MyMonth extends StatsOverviewWidget
         return auth()->check() && ! Fields::isOffice();
     }
 
-    protected function getColumns(): int|array|null
+    protected function getColumns(): int | array | null
     {
         return 2;
     }

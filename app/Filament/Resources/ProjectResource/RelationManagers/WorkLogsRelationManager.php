@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\ProjectResource\RelationManagers;
 
 use App\Filament\Resources\WorkLogResource;
-use App\Filament\Support\Fields;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -33,7 +32,7 @@ class WorkLogsRelationManager extends RelationManager
     {
         return $table
             ->columns(WorkLogResource::tableColumns(withProject: false))
-            ->filters([Fields::periodFilter(), Fields::employeeFilter()])
+            ->filters([\App\Filament\Support\Fields::periodFilter(), \App\Filament\Support\Fields::employeeFilter()])
             ->defaultSort('date', 'desc')
             ->headerActions([CreateAction::make()])
             ->recordActions([EditAction::make(), DeleteAction::make()]);

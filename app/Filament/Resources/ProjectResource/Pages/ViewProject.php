@@ -75,7 +75,7 @@ class ViewProject extends ViewRecord
         return [ProjectStats::class, ProjectPlanFact::class];
     }
 
-    public function getHeaderWidgetsColumns(): int|array
+    public function getHeaderWidgetsColumns(): int | array
     {
         return 1;
     }

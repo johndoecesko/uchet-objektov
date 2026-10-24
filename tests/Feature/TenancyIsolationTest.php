@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Enums\OrganizationStatus;
 use App\Enums\PaymentSource;
 use App\Enums\UserRole;
+use App\Filament\Resources\ActivityResource;
 use App\Filament\Resources\ActivityResource\Pages\ListActivities;
 use App\Filament\Resources\AdvanceResource;
 use App\Filament\Resources\AdvanceResource\Pages\ListAdvances;
@@ -24,7 +25,6 @@ use App\Filament\Resources\ProjectResource;
 use App\Filament\Resources\ProjectResource\Pages\ListProjects;
 use App\Filament\Resources\WorkLogResource;
 use App\Filament\Resources\WorkLogResource\Pages\ListWorkLogs;
-use App\Filament\Support\Fields;
 use App\Filament\Widgets\ActiveProjects;
 use App\Filament\Widgets\NeedsAttention;
 use App\Filament\Widgets\OverviewStats;
@@ -227,8 +227,8 @@ class TenancyIsolationTest extends TestCase
         // выпадающие списки — только свои объекты, статьи, сотрудники, участники
         Livewire::test(CreateExpense::class)->assertFormFieldExists('project_id', fn ($f) => ! array_key_exists($this->projectB->id, $f->getOptions()) && array_key_exists($this->project->id, $f->getOptions()));
         Livewire::test(CreateExpense::class)->assertFormFieldExists('expense_category_id', fn ($f) => ! array_key_exists($catB->id, $f->getOptions()));
-        $this->assertArrayNotHasKey($this->adminB->id, Fields::memberOptions());
-        $this->assertArrayHasKey($this->foreman->id, Fields::memberOptions());
+        $this->assertArrayNotHasKey($this->adminB->id, \App\Filament\Support\Fields::memberOptions());
+        $this->assertArrayHasKey($this->foreman->id, \App\Filament\Support\Fields::memberOptions());
     }
 
     public function test_models_refuse_cross_organization_links(): void
@@ -334,8 +334,8 @@ class TenancyIsolationTest extends TestCase
 
     public function test_new_uploads_go_to_organization_folder(): void
     {
-        $this->assertSame('receipts/'.$this->org->id, Fields::organizationDirectory('receipts'));
-        $this->assertSame('documents/'.$this->org->id.'/incomes', Fields::organizationDirectory('documents/incomes'));
+        $this->assertSame('receipts/'.$this->org->id, \App\Filament\Support\Fields::organizationDirectory('receipts'));
+        $this->assertSame('documents/'.$this->org->id.'/incomes', \App\Filament\Support\Fields::organizationDirectory('documents/incomes'));
     }
 
     public function test_user_in_two_organizations_sees_each_with_own_role(): void

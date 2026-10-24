@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Enums\UserRole;
 use App\Filament\Pages\Settings;
 use App\Filament\Resources\ExpenseResource;
 use App\Filament\Resources\IncomeResource;
@@ -70,7 +69,7 @@ class SettingsAndAttachmentsTest extends TestCase
 
     public function test_settings_page_forbidden_for_manager(): void
     {
-        $manager = $this->member('М', 'm@test.ru', UserRole::Manager);
+        $manager = $this->member('М', 'm@test.ru', \App\Enums\UserRole::Manager);
         $this->actingAs($manager)->get(Settings::getUrl())->assertForbidden();
     }
 

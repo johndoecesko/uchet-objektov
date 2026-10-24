@@ -16,7 +16,6 @@ use App\Support\Money;
 use Database\Seeders\DemoSeeder;
 use Filament\Facades\Filament;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Hash;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -65,7 +64,7 @@ class DemoSeederTest extends TestCase
         $this->useDemo();
 
         $admin = User::where('email', 'admin@demo.local')->firstOrFail();
-        $this->assertTrue(Hash::check(DemoSeeder::PASSWORD, $admin->password));
+        $this->assertTrue(\Illuminate\Support\Facades\Hash::check(DemoSeeder::PASSWORD, $admin->password));
 
         $this->actingAs($admin);
         $this->get('/app')->assertRedirect('/app/demo');

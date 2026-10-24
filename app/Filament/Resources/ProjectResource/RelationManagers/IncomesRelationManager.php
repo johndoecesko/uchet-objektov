@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\ProjectResource\RelationManagers;
 
 use App\Filament\Resources\IncomeResource;
-use App\Filament\Support\Fields;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -33,7 +32,7 @@ class IncomesRelationManager extends RelationManager
     {
         return $table
             ->columns(IncomeResource::tableColumns(withProject: false))
-            ->filters([Fields::periodFilter()])
+            ->filters([\App\Filament\Support\Fields::periodFilter()])
             ->defaultSort('date', 'desc')
             ->headerActions([CreateAction::make()])
             ->recordActions([EditAction::make(), DeleteAction::make()]);

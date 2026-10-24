@@ -8,8 +8,8 @@ use App\Filament\Resources\IncomeResource\Pages;
 use App\Filament\Support\Fields;
 use App\Models\Income;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Textarea;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Schema;
@@ -22,9 +22,9 @@ class IncomeResource extends Resource
 {
     protected static ?string $model = Income::class;
 
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-arrow-down-tray';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-arrow-down-tray';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Учёт';
+    protected static string | \UnitEnum | null $navigationGroup = 'Учёт';
 
     protected static ?int $navigationSort = 4;
 

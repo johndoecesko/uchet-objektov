@@ -16,9 +16,9 @@ use Filament\Schemas\Schema;
 /** Настройки (только админ): пороги блока «Требует внимания» */
 class Settings extends Page
 {
-    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-adjustments-horizontal';
+    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-adjustments-horizontal';
 
-    protected static string|\UnitEnum|null $navigationGroup = 'Настройки';
+    protected static string | \UnitEnum | null $navigationGroup = 'Настройки';
 
     protected static ?int $navigationSort = 4;
 

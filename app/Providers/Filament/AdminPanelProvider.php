@@ -5,6 +5,7 @@ namespace App\Providers\Filament;
 use App\Filament\Auth\EditProfile;
 use App\Filament\Auth\Login;
 use App\Filament\Auth\Register;
+use App\Filament\Auth\RequestPasswordReset;
 use App\Filament\Pages\Tenancy\EditOrganizationProfile;
 use App\Filament\Pages\Tenancy\RegisterOrganization;
 use App\Http\Middleware\EnsureOrganizationIsActive;
@@ -40,6 +41,10 @@ class AdminPanelProvider extends PanelProvider
             ->path('app')
             ->login(Login::class)
             ->registration(Register::class)
+            // Почта: подтверждение после регистрации, сброс пароля, смена почты в профиле — только по ссылке из письма
+            ->emailVerification()
+            ->passwordReset(RequestPasswordReset::class)
+            ->emailChangeVerification()
             ->profile(EditProfile::class, isSimple: false)
             // Организации: /app/{slug}/…, переключатель вверху, своя роль в каждой
             ->tenant(Organization::class, slugAttribute: 'slug')

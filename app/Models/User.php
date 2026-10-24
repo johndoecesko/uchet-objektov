@@ -9,6 +9,7 @@ use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasDefaultTenant;
 use Filament\Models\Contracts\HasTenants;
 use Filament\Panel;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -20,8 +21,9 @@ use Illuminate\Support\Collection;
 /**
  * Пользователь платформы. Роль — не у пользователя, а в каждой организации (Membership).
  * is_active — общий доступ к сервису (блокирует администратор платформы).
+ * Почта подтверждается письмом (кроме пришедших по почтовому приглашению); без подтверждения панель не открывается.
  */
-class User extends Authenticatable implements FilamentUser, HasDefaultTenant, HasTenants
+class User extends Authenticatable implements FilamentUser, HasDefaultTenant, HasTenants, MustVerifyEmail
 {
     use HasFactory, LogsChanges, Notifiable;
 

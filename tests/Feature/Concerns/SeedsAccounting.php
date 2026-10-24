@@ -59,6 +59,7 @@ trait SeedsAccounting
     protected function member(string $name, string $email, UserRole $role, ?Organization $org = null): User
     {
         $user = User::create(['name' => $name, 'email' => $email, 'password' => 'secret123']);
+        $user->forceFill(['email_verified_at' => now()])->save();
         ($org ?? $this->org)->addMember($user, $role);
 
         return $user;

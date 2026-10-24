@@ -76,6 +76,7 @@ class MigrationToOrganizationsTest extends TestCase
         $this->assertSame([$org->id, $org->id], DB::table('users')->orderBy('id')->pluck('current_organization_id')->map(fn ($v) => (int) $v)->all());
         $this->assertSame('21', (string) DB::table('settings')->where('organization_id', $org->id)->where('key', 'attention.advance_days')->value('value'));
         $this->assertFalse(Schema::hasTable('settings_old'));
+        $this->assertSame(0, DB::table('users')->whereNull('email_verified_at')->count(), 'старые учётки не упрутся в подтверждение почты');
 
         // повторный запуск ничего не ломает и не плодит организаций
         $this->migrate(onlyOld: false);

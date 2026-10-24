@@ -46,6 +46,7 @@ class OrganizationFlowTest extends TestCase
     public function test_user_without_organization_creates_one_and_becomes_admin(): void
     {
         $u = User::create(['name' => 'Новичок', 'email' => 'new@test.ru', 'password' => 'secret123']);
+        $u->forceFill(['email_verified_at' => now()])->save();
         $this->useOrganization(null);
         $this->actingAs($u);
 

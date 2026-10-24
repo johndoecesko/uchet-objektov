@@ -4,6 +4,7 @@ namespace App\Filament\Auth;
 
 use App\Models\User;
 use App\Support\Registration;
+use Filament\Auth\Http\Responses\Contracts\RegistrationResponse;
 use Filament\Auth\Pages\Register as BaseRegister;
 use Filament\Schemas\Components\Component;
 use Illuminate\Contracts\Support\Htmlable;
@@ -27,14 +28,14 @@ class Register extends BaseRegister
         }
     }
 
-    public function register(): ?\Filament\Auth\Http\Responses\Contracts\RegistrationResponse
+    public function register(): ?RegistrationResponse
     {
         abort_unless(Registration::allowed(), 404);
 
         return parent::register();
     }
 
-    public function getSubheading(): string | Htmlable | null
+    public function getSubheading(): string|Htmlable|null
     {
         $invitation = Registration::pendingInvitation();
 

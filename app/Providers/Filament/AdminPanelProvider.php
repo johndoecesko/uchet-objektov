@@ -67,6 +67,10 @@ class AdminPanelProvider extends PanelProvider
                 "<script>if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js')); }</script>"
             ))
             ->userMenuItems([
+                Action::make('install')
+                    ->label('Установить на телефон')
+                    ->icon('heroicon-o-device-phone-mobile')
+                    ->url('/install', shouldOpenInNewTab: true),
                 // Бот MAX: одноразовый код для привязки (показывается, только если бот настроен)
                 Action::make('maxLink')
                     ->label(fn () => auth()->user()?->max_user_id ? 'MAX подключён — отключить' : 'Подключить MAX')

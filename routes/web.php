@@ -13,6 +13,7 @@ Route::get('/', fn () => auth()->check() ? redirect('/app') : view('landing'))->
 Route::view('/privacy', 'legal.privacy')->name('privacy');
 Route::view('/terms', 'legal.terms')->name('terms');
 Route::view('/consent', 'legal.consent')->name('consent');
+Route::view('/install', 'install')->name('install');
 
 // «В мою организацию»: /go/expenses/create → /app/{организация}/expenses/create (ярлыки PWA, старые ссылки)
 Route::get('/go/{path?}', GoToOrganization::class)->where('path', '[a-z0-9\-/]*')->name('go');

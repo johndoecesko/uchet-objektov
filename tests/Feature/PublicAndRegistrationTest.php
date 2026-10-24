@@ -48,6 +48,14 @@ class PublicAndRegistrationTest extends TestCase
         $this->get('/')->assertOk()->assertSee('Зарегистрироваться бесплатно')->assertDontSee('Регистрация пока по приглашению');
     }
 
+    public function test_install_instructions_on_landing_and_own_page(): void
+    {
+        $this->get('/')->assertOk()->assertSee('id="install"', false)->assertSee('Установить приложение')->assertSee('На экран «Домой»');
+        $this->get('/install')->assertOk()->assertSee('Как установить на телефон')->assertSee('Safari');
+        $this->actingAs(User::create(['name' => 'Вошедший', 'email' => 'in@test.ru', 'password' => 'secret123']))
+            ->get('/install')->assertOk()->assertSee('Открыть учёт');
+    }
+
     public function test_documents_show_version_and_mark_missing_operator_details(): void
     {
         $this->get('/privacy')->assertOk()

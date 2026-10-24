@@ -13,6 +13,7 @@ use App\Models\Employee;
 use App\Models\Expense;
 use App\Models\ExpenseCategory;
 use App\Models\Income;
+use App\Models\Invitation;
 use App\Models\Organization;
 use App\Models\Payout;
 use App\Models\Project;
@@ -67,6 +68,10 @@ class DemoSeeder extends Seeder
             $u[$role->value]->forceFill(['email_verified_at' => now(), 'current_organization_id' => $org->id])->save();
             $org->addMember($u[$role->value], $role);
         }
+
+        // Приглашение, которое ещё не приняли, — видно в «Участниках»
+        (new Invitation(['email' => 'novyi.prorab@demo.local', 'role' => UserRole::Foreman, 'expires_at' => now()->addDays(6)]))
+            ->forceFill(['created_by' => $u['admin']->id])->save();
 
         $foreman = Employee::create(['name' => 'Игорь Монтажов', 'position' => 'Прораб', 'day_rate' => 4500, 'user_id' => $u['foreman']->id, 'phone' => '+7 900 000-00-01']);
         $workers = [

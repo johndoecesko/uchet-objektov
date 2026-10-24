@@ -52,6 +52,8 @@ return [
     'max' => [
         'token' => env('MAX_BOT_TOKEN'),
         'webhook_secret' => env('MAX_WEBHOOK_SECRET'),
+        // ссылка на бота для «О программе и помощь» (https://max.ru/<имя_бота>), необязательно
+        'bot_url' => env('MAX_BOT_URL'),
         'url' => env('MAX_API_URL', 'https://platform-api2.max.ru'),
         // false — событие обрабатывается сразу после ответа MAX; true — через очередь (воркер раз в минуту)
         'queue' => (bool) env('MAX_QUEUE', false),

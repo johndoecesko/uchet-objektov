@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', 'Учёт объектов')</title>
+    <title>@yield('title', 'Финпрораб — учёт объектов')</title>
     <meta name="description" content="@yield('description', 'Учёт денег по монтажным объектам: расходы, зарплата, поступления, прибыль')">
     <link rel="icon" href="/icons/favicon-32.png">
     <link rel="manifest" href="/manifest.json">
@@ -17,7 +17,9 @@
         header.top { background: #fff; border-bottom: 1px solid var(--line); }
         header.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 60px; }
         .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; color: var(--text); text-decoration: none; font-size: 18px; }
-        .brand img { width: 32px; height: 32px; border-radius: 8px; }
+        .brand img { width: 36px; height: 36px; border-radius: 9px; }
+        .brand span { display: flex; flex-direction: column; line-height: 1.1; }
+        .brand small { font-weight: 500; font-size: 13px; color: var(--muted); }
         .btn { display: inline-block; padding: 10px 18px; border-radius: 10px; background: var(--blue); color: #fff; text-decoration: none; font-weight: 600; border: 0; cursor: pointer; font-size: 16px; }
         .btn:hover { background: var(--blue-dark); }
         .btn.ghost { background: transparent; color: var(--blue); border: 1px solid var(--blue); }
@@ -32,14 +34,14 @@
 <body>
 <header class="top">
     <div class="wrap">
-        <a class="brand" href="/"><img src="/icons/icon-192.png" alt="">Учёт объектов</a>
+        <a class="brand" href="/"><img src="/icons/icon-192.png" alt=""><span>Финпрораб<small>Учёт объектов</small></span></a>
         <nav>@yield('nav')</nav>
     </div>
 </header>
 <main>@yield('content')</main>
 <footer class="bottom">
     <div class="wrap">
-        <span>© {{ date('Y') }} «Учёт объектов»</span>
+        <span>© {{ date('Y') }} Финпрораб — учёт объектов</span>
         <span>
             @if (\Illuminate\Support\Facades\Route::has('privacy'))<a href="{{ route('privacy') }}">Политика обработки персональных данных</a> · <a href="{{ route('terms') }}">Пользовательское соглашение</a> · @endif
             Связь: <a href="https://t.me/{{ ltrim(config('app.support_telegram'), '@') }}">{{ config('app.support_telegram') }}</a>, <a href="mailto:{{ config('app.support_email') }}">{{ config('app.support_email') }}</a>

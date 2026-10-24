@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\InitialsAvatarProvider;
 use App\Filament\Auth\Login;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -32,6 +33,7 @@ class PlatformPanelProvider extends PanelProvider
             ->path('platform')
             ->login(Login::class)
             ->brandName('Финпрораб · платформа')
+            ->defaultAvatarProvider(InitialsAvatarProvider::class)
             ->favicon(asset('icons/favicon-32.png'))
             ->colors(['primary' => Color::Slate])
             ->maxContentWidth('full')

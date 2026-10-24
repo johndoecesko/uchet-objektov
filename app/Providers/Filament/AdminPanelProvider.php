@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\InitialsAvatarProvider;
 use App\Filament\Auth\EditProfile;
 use App\Filament\Pages\About;
 use App\Filament\Auth\Login;
@@ -57,6 +58,7 @@ class AdminPanelProvider extends PanelProvider
             ->brandName('Финпрораб')
             ->brandLogo(fn () => view('filament.brand'))
             ->brandLogoHeight('2.5rem')
+            ->defaultAvatarProvider(InitialsAvatarProvider::class)
             ->favicon(asset('icons/favicon-32.png'))
             // PWA: устанавливается на телефон как приложение (Chrome → «Установить приложение»)
             ->renderHook(PanelsRenderHook::HEAD_END, fn (): HtmlString => new HtmlString(

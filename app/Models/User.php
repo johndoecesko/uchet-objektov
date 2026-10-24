@@ -4,8 +4,10 @@ namespace App\Models;
 
 use App\Enums\UserRole;
 use App\Models\Concerns\LogsChanges;
+use App\Support\Avatar;
 use App\Support\CurrentOrganization;
 use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasAvatar;
 use Filament\Models\Contracts\HasDefaultTenant;
 use Filament\Models\Contracts\HasTenants;
 use Filament\Panel;
@@ -23,11 +25,11 @@ use Illuminate\Support\Collection;
  * is_active — общий доступ к сервису (блокирует администратор платформы).
  * Почта подтверждается письмом (кроме пришедших по почтовому приглашению); без подтверждения панель не открывается.
  */
-class User extends Authenticatable implements FilamentUser, HasDefaultTenant, HasTenants, MustVerifyEmail
+class User extends Authenticatable implements FilamentUser, HasAvatar, HasDefaultTenant, HasTenants, MustVerifyEmail
 {
     use HasFactory, LogsChanges, Notifiable;
 
-    protected $fillable = ['name', 'email', 'password', 'is_active', 'phone'];
+    protected $fillable = ['name', 'email', 'password', 'is_active', 'phone', 'avatar_path'];
 
     protected $hidden = ['password', 'remember_token'];
 
@@ -53,6 +55,19 @@ class User extends Authenticatable implements FilamentUser, HasDefaultTenant, Ha
             'has_password' => 'boolean',
             'max_user_id' => 'integer',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        // Сменили или убрали фото — старый файл не копим
+        static::saving(fn (User $user) => Avatar::forgetOld($user, 'avatar_path'));
+        static::deleted(fn (User $user) => Avatar::forgetOld($user, 'avatar_path', deleted: true));
+    }
+
+    /** Фото профиля в меню пользователя и в «Участниках»; нет фото — инициалы */
+    public function getFilamentAvatarUrl(): ?string
+    {
+        return Avatar::url($this->avatar_path);
     }
 
     public function canAccessPanel(Panel $panel): bool

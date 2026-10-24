@@ -3,6 +3,7 @@
 namespace App\Filament\Pages\Tenancy;
 
 use App\Models\Organization;
+use App\Support\Avatar;
 use App\Support\DaData;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -57,6 +58,7 @@ class EditOrganizationProfile extends EditTenantProfile
     public function form(Schema $schema): Schema
     {
         return $schema->components([
+            Avatar::field('logo_path', 'logos', 'Логотип')->helperText('Виден в переключателе организаций слева вверху. JPG, PNG или WebP до 5 МБ.'),
             ...self::organizationFields(),
             TextEntry::make('slug')->label('Адрес в учёте')
                 ->state(fn (?Organization $record) => $record ? url('/app/'.$record->slug) : null),

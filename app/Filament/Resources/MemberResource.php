@@ -14,6 +14,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -63,6 +64,8 @@ class MemberResource extends Resource
     {
         return $table
             ->columns([
+                ImageColumn::make('avatar')->label('')->circular()->imageSize(32)
+                    ->state(fn ($record) => filament()->getUserAvatarUrl($record->user)),
                 TextColumn::make('user.name')->label('Имя')->searchable(),
                 TextColumn::make('user.email')->label('Email')->searchable(),
                 TextColumn::make('role')->label('Роль')->badge(),

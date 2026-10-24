@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Enums\OrganizationStatus;
 use App\Enums\UserRole;
+use App\Support\Avatar;
+use Filament\Models\Contracts\HasAvatar;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -11,7 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str;
 
 /** Организация (тенант): у каждой свои объекты, люди, деньги, статьи затрат и настройки */
-class Organization extends Model
+class Organization extends Model implements HasAvatar
 {
     /** Статьи затрат новой организации: [название, is_labor, is_tax, sort] */
     public const DEFAULT_CATEGORIES = [
@@ -33,13 +35,19 @@ class Organization extends Model
         'livewire', 'platform', 'app', 'go', 'auth', 'settings', 'admin', 'storage', 'up',
     ];
 
-    protected $fillable = ['name', 'slug', 'inn', 'status'];
+    protected $fillable = ['name', 'slug', 'inn', 'status', 'logo_path'];
 
     protected $attributes = ['status' => 'active'];
 
     protected function casts(): array
     {
         return ['status' => OrganizationStatus::class];
+    }
+
+    /** Логотип в переключателе организаций; нет логотипа — буквы названия */
+    public function getFilamentAvatarUrl(): ?string
+    {
+        return Avatar::url($this->logo_path);
     }
 
     protected static function booted(): void
@@ -53,6 +61,8 @@ class Organization extends Model
 
         // Новая организация получает стандартный справочник статей затрат
         static::created(fn (Organization $org) => $org->seedDefaults());
+        static::saving(fn (Organization $org) => Avatar::forgetOld($org, 'logo_path'));
+        static::deleted(fn (Organization $org) => Avatar::forgetOld($org, 'logo_path', deleted: true));
     }
 
     public function seedDefaults(): void

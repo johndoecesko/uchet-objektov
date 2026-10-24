@@ -2,6 +2,7 @@
 
 namespace App\Filament\Auth;
 
+use App\Support\Avatar;
 use App\Support\Social\Provider;
 use Filament\Actions\Action;
 use Filament\Auth\Pages\EditProfile as BaseEditProfile;
@@ -64,6 +65,7 @@ class EditProfile extends BaseEditProfile
     public function form(Schema $schema): Schema
     {
         return $schema->components([
+            Avatar::field('avatar_path', 'avatars', 'Фото')->helperText('Видно в меню справа вверху и в списке участников. JPG, PNG или WebP до 5 МБ.'),
             $this->getNameFormComponent(),
             $this->getEmailFormComponent(),
             TextInput::make('phone')->label('Телефон')->tel()->maxLength(50),

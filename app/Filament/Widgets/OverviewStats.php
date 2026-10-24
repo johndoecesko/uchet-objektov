@@ -29,7 +29,7 @@ class OverviewStats extends StatsOverviewWidget
         return Fields::isOffice();
     }
 
-    protected function getColumns(): int | array | null
+    protected function getColumns(): int|array|null
     {
         return 4;
     }

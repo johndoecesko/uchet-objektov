@@ -6,13 +6,14 @@ use App\Filament\Resources\WorkLogResource\Pages;
 use App\Filament\Support\Fields;
 use App\Models\Employee;
 use App\Models\WorkLog;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Resource;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -21,9 +22,9 @@ class WorkLogResource extends Resource
 {
     protected static ?string $model = WorkLog::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-calendar-days';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-calendar-days';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Учёт';
+    protected static string|\UnitEnum|null $navigationGroup = 'Учёт';
 
     protected static ?int $navigationSort = 3;
 
@@ -78,7 +79,7 @@ class WorkLogResource extends Resource
             $withProject ? TextColumn::make('project.name')->label('Объект')->searchable()->limit(30) : null,
             TextColumn::make('work')->label('Работы')->limit(40)->searchable(),
             TextColumn::make('days')->label('Дней')->numeric(decimalPlaces: 1, locale: 'ru')->alignEnd()
-                ->summarize(\Filament\Tables\Columns\Summarizers\Sum::make()->label('Дней')->numeric(decimalPlaces: 1, locale: 'ru')),
+                ->summarize(Sum::make()->label('Дней')->numeric(decimalPlaces: 1, locale: 'ru')),
             Fields::moneyColumn('rate', 'Ставка', false)->toggleable(isToggledHiddenByDefault: true),
             Fields::moneyColumn('amount', 'Начислено'),
             TextColumn::make('creator.name')->label('Внёс')->toggleable(isToggledHiddenByDefault: true),

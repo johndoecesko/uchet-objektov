@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Models\Concerns\BelongsToOrganization;
 use App\Models\Concerns\LogsChanges;
 use App\Support\CurrentOrganization;
+use App\Support\OrganizationMismatch;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 
@@ -51,7 +52,7 @@ class Setting extends Model
     public static function put(string $key, mixed $value): void
     {
         $orgId = app(CurrentOrganization::class)->id()
-            ?? throw new \App\Support\OrganizationMismatch('Настройка сохраняется без организации');
+            ?? throw new OrganizationMismatch('Настройка сохраняется без организации');
         static::updateOrCreate(['organization_id' => $orgId, 'key' => $key], ['value' => $value]);
     }
 }

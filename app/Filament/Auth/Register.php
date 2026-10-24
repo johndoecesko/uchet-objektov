@@ -2,18 +2,24 @@
 
 namespace App\Filament\Auth;
 
+use App\Filament\Forms\SmartCaptchaField;
 use App\Models\User;
+use App\Support\AuthThrottle;
 use App\Support\Registration;
 use Filament\Auth\Http\Responses\Contracts\RegistrationResponse;
 use Filament\Auth\Pages\Register as BaseRegister;
+use Filament\Forms\Components\Checkbox;
 use Filament\Schemas\Components\Component;
+use Filament\Schemas\Schema;
 use Illuminate\Contracts\Support\Htmlable;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\HtmlString;
 use SensitiveParameter;
 
 /**
- * Регистрация по почте и паролю. Пока открытая регистрация выключена — только по приглашению:
- * почта из приглашения подставляется сама и считается подтверждённой (ссылка пришла на неё).
+ * Регистрация по почте и паролю: открытая (REGISTRATION_ENABLED) или по приглашению.
+ * Почта из почтового приглашения подставляется сама и считается подтверждённой (ссылка пришла на неё).
+ * Обязательное согласие с документами (когда, редакция, IP — в users.consent_*), капча, суточный лимит с IP.
  */
 class Register extends BaseRegister
 {
@@ -32,7 +38,16 @@ class Register extends BaseRegister
     {
         abort_unless(Registration::allowed(), 404);
 
-        return parent::register();
+        if (AuthThrottle::exceeded('register')) {
+            return null;
+        }
+
+        try {
+            return parent::register();
+        } finally {
+            // токен капчи одноразовый: после любой попытки — новый
+            $this->dispatch('smart-captcha-reset');
+        }
     }
 
     public function getSubheading(): string|Htmlable|null
@@ -44,6 +59,18 @@ class Register extends BaseRegister
             : parent::getSubheading();
     }
 
+    public function form(Schema $schema): Schema
+    {
+        return $schema->components([
+            $this->getNameFormComponent(),
+            $this->getEmailFormComponent(),
+            $this->getPasswordFormComponent(),
+            $this->getPasswordConfirmationFormComponent(),
+            ...$this->getConsentFormComponents(),
+            SmartCaptchaField::make(),
+        ]);
+    }
+
     protected function getEmailFormComponent(): Component
     {
         $field = parent::getEmailFormComponent();
@@ -51,6 +78,23 @@ class Register extends BaseRegister
         return Registration::pendingInvitation()?->email
             ? $field->readOnly()->helperText('Почта из приглашения')
             : $field;
+    }
+
+    /** Две отметки: согласие на обработку ПДн по 152-ФЗ оформляется отдельно от прочих условий */
+    protected function getConsentFormComponents(): array
+    {
+        return [
+            Checkbox::make('terms')
+                ->label(new HtmlString('Принимаю <a href="'.e(route('terms')).'" target="_blank" class="underline">Пользовательское соглашение</a>'))
+                ->accepted()
+                ->validationMessages(['accepted' => 'Без согласия с Пользовательским соглашением зарегистрироваться нельзя.'])
+                ->dehydrated(false),
+            Checkbox::make('consent')
+                ->label(new HtmlString('Даю согласие на обработку персональных данных на условиях <a href="'.e(route('privacy')).'" target="_blank" class="underline">Политики обработки персональных данных</a>'))
+                ->accepted()
+                ->validationMessages(['accepted' => 'Без согласия на обработку персональных данных зарегистрироваться нельзя.'])
+                ->dehydrated(false),
+        ];
     }
 
     protected function handleRegistration(#[SensitiveParameter] array $data): Model
@@ -66,9 +110,16 @@ class Register extends BaseRegister
             'password' => $data['password'],
         ]);
 
+        // отметки проверила форма (accepted) — без них сюда не дойти
+        $user->forceFill([
+            'consent_at' => now(),
+            'consent_version' => config('legal.version'),
+            'consent_ip' => request()->ip(),
+        ]);
         if ($invitation?->email && $invitation->allows($user)) {
-            $user->forceFill(['email_verified_at' => now()])->save();
+            $user->forceFill(['email_verified_at' => now()]);
         }
+        $user->save();
 
         return $user;
     }

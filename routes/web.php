@@ -7,7 +7,10 @@ use Illuminate\Support\Facades\Route;
 // Учёт — панель Filament на /app (App\Providers\Filament\AdminPanelProvider), организация в адресе: /app/{slug}/…
 // Администратор платформы — /platform (App\Providers\Filament\PlatformPanelProvider)
 
-Route::get('/', fn () => redirect(auth()->check() ? '/app' : '/app/login'))->name('home');
+// Публичная часть: страница сервиса и документы (тексты — resources/views/legal, версия — config/legal.php)
+Route::view('/', 'landing')->name('home');
+Route::view('/privacy', 'legal.privacy')->name('privacy');
+Route::view('/terms', 'legal.terms')->name('terms');
 
 // «В мою организацию»: /go/expenses/create → /app/{организация}/expenses/create (ярлыки PWA, старые ссылки)
 Route::get('/go/{path?}', GoToOrganization::class)->where('path', '[a-z0-9\-/]*')->name('go');

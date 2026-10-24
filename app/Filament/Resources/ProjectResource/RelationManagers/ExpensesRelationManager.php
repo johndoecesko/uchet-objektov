@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ProjectResource\RelationManagers;
 
 use App\Filament\Resources\ExpenseResource;
+use App\Filament\Support\Fields;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -32,7 +33,7 @@ class ExpensesRelationManager extends RelationManager
     {
         return $table
             ->columns(ExpenseResource::tableColumns(withProject: false))
-            ->filters([\App\Filament\Support\Fields::periodFilter(), \App\Filament\Support\Fields::categoryFilter()])
+            ->filters([Fields::periodFilter(), Fields::categoryFilter()])
             ->defaultSort('date', 'desc')
             ->headerActions([CreateAction::make()])
             ->recordActions([EditAction::make(), DeleteAction::make()]);

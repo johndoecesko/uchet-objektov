@@ -18,9 +18,9 @@ class ExpenseCategoryResource extends Resource
 {
     protected static ?string $model = ExpenseCategory::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-tag';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-tag';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Настройки';
+    protected static string|\UnitEnum|null $navigationGroup = 'Настройки';
 
     protected static ?int $navigationSort = 1;
 

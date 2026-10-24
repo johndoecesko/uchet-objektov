@@ -16,7 +16,7 @@ class ProjectPlanFact extends TableWidget
 
     public ?Model $record = null;
 
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
 
     public static function canView(): bool
     {

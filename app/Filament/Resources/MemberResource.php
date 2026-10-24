@@ -25,9 +25,9 @@ class MemberResource extends Resource
 
     protected static ?string $slug = 'members';
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-user-circle';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-user-circle';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Настройки';
+    protected static string|\UnitEnum|null $navigationGroup = 'Настройки';
 
     protected static ?int $navigationSort = 2;
 

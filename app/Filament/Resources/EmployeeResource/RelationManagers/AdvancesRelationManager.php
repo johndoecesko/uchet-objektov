@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\EmployeeResource\RelationManagers;
 
 use App\Filament\Resources\AdvanceResource;
+use App\Filament\Support\Fields;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
@@ -32,7 +33,7 @@ class AdvancesRelationManager extends RelationManager
     {
         return $table
             ->columns(AdvanceResource::tableColumns(withEmployee: false))
-            ->filters([\App\Filament\Support\Fields::periodFilter()])
+            ->filters([Fields::periodFilter()])
             ->defaultSort('date', 'desc')
             ->headerActions([CreateAction::make()])
             ->recordActions([EditAction::make(), DeleteAction::make()]);

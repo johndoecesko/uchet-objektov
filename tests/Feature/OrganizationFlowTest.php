@@ -6,10 +6,11 @@ use App\Enums\UserRole;
 use App\Filament\Auth\Register;
 use App\Filament\Pages\Tenancy\EditOrganizationProfile;
 use App\Filament\Pages\Tenancy\RegisterOrganization;
+use App\Filament\Platform\Resources\OrganizationResource\Pages\ListOrganizations;
+use App\Filament\Platform\Resources\UserResource\Pages\ListUsers;
 use App\Filament\Resources\MemberResource;
 use App\Filament\Resources\MemberResource\Pages\EditMember;
 use App\Filament\Resources\MemberResource\Pages\ListMembers;
-use App\Models\Employee;
 use App\Models\ExpenseCategory;
 use App\Models\Invitation;
 use App\Models\Membership;
@@ -99,7 +100,7 @@ class OrganizationFlowTest extends TestCase
         $this->get('/app/register')->assertOk();
 
         Livewire::test(Register::class)
-            ->fillForm(['name' => 'Монтажник Петя', 'email' => 'petya@test.ru', 'password' => 'Str0ng-pass!', 'passwordConfirmation' => 'Str0ng-pass!'])
+            ->fillForm(['name' => 'Монтажник Петя', 'email' => 'petya@test.ru', 'password' => 'Str0ng-pass!', 'passwordConfirmation' => 'Str0ng-pass!', 'terms' => true, 'consent' => true])
             ->call('register')->assertHasNoFormErrors();
         $petya = User::where('email', 'petya@test.ru')->firstOrFail();
         $this->assertNull($petya->email_verified_at, 'ссылка не подтверждает почту');
@@ -137,7 +138,7 @@ class OrganizationFlowTest extends TestCase
         $this->get($invite->url())->assertOk();
         Livewire::test(Register::class)
             ->assertFormSet(['email' => 'manager@test.ru'])
-            ->fillForm(['name' => 'Марина', 'email' => 'other@test.ru', 'password' => 'Str0ng-pass!', 'passwordConfirmation' => 'Str0ng-pass!'])
+            ->fillForm(['name' => 'Марина', 'email' => 'other@test.ru', 'password' => 'Str0ng-pass!', 'passwordConfirmation' => 'Str0ng-pass!', 'terms' => true, 'consent' => true])
             ->call('register')->assertHasNoFormErrors();
         $this->assertNull(User::where('email', 'other@test.ru')->first(), 'почту из приглашения не подменить');
         $m = User::where('email', 'manager@test.ru')->firstOrFail();
@@ -233,7 +234,7 @@ class OrganizationFlowTest extends TestCase
 
         $this->actingAs($this->admin);
         $this->get('/go/expenses/create')->assertRedirect('/app/vtoraya/expenses/create');
-        $this->get('/')->assertRedirect('/app');
+        $this->get('/')->assertOk()->assertSee('Открыть учёт');
         $this->get('/app')->assertRedirect('/app/vtoraya');
 
         // открыл организацию — она становится организацией по умолчанию
@@ -268,11 +269,11 @@ class OrganizationFlowTest extends TestCase
         Filament::setCurrentPanel(Filament::getPanel('platform'));
         $this->actingAs($boss);
 
-        Livewire::test(\App\Filament\Platform\Resources\OrganizationResource\Pages\ListOrganizations::class)
+        Livewire::test(ListOrganizations::class)
             ->callAction(TestAction::make('block')->table($this->org));
         $this->assertTrue($this->org->fresh()->isBlocked());
 
-        Livewire::test(\App\Filament\Platform\Resources\UserResource\Pages\ListUsers::class)
+        Livewire::test(ListUsers::class)
             ->callAction(TestAction::make('block')->table($this->foreman));
         $this->assertFalse($this->foreman->fresh()->is_active);
     }

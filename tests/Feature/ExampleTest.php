@@ -11,7 +11,6 @@ class ExampleTest extends TestCase
 
     public function test_guest_is_redirected_to_login(): void
     {
-        $this->get('/')->assertRedirect('/app/login');
         $this->get('/app')->assertRedirect('/app/login');
         $this->get('/app/login')->assertOk()
             ->assertSee('<link rel="manifest" href="/manifest.json">', false)

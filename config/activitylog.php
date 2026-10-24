@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Activity;
+
 return [
 
     /*
@@ -35,7 +37,7 @@ return [
      * It should implement the Spatie\Activitylog\Contracts\Activity interface
      * and extend Illuminate\Database\Eloquent\Model.
      */
-    'activity_model' => \App\Models\Activity::class, // с organization_id и scope организации
+    'activity_model' => Activity::class, // с organization_id и scope организации
 
     /*
      * This is the name of the table that will be created by the migration and

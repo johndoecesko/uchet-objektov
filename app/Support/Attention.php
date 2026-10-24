@@ -10,6 +10,7 @@ use App\Models\Advance;
 use App\Models\Employee;
 use App\Models\Project;
 use App\Models\Setting;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
 /** Что требует внимания: перерасходы, низкая маржа, незакрытый подотчёт, долги */
@@ -83,7 +84,7 @@ class Attention
             $bal = $e->advanceBalance();
             if ($bal > 0.009) {
                 $last = Advance::where('employee_id', $e->id)->where('type', AdvanceType::Issue->value)->max('date');
-                $days = $last ? (int) now()->startOfDay()->diffInDays(\Illuminate\Support\Carbon::parse($last), true) : 0;
+                $days = $last ? (int) now()->startOfDay()->diffInDays(Carbon::parse($last), true) : 0;
                 if ($days >= $advanceDays) {
                     $items->push(['level' => 'danger', 'title' => $e->name,
                         'text' => 'Не отчитался за '.Money::fmt($bal).", последняя выдача {$days} дн. назад",

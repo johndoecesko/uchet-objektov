@@ -29,6 +29,13 @@ return [
         'url' => env('DADATA_URL', 'https://suggestions.dadata.ru/suggestions/api/4_1/rs'),
     ],
 
+    // Яндекс SmartCaptcha на регистрации и сбросе пароля (https://yandex.cloud/ru/docs/smartcaptcha/). Без ключей — выключена
+    'smartcaptcha' => [
+        'client_key' => env('SMARTCAPTCHA_CLIENT_KEY'),
+        'server_key' => env('SMARTCAPTCHA_SERVER_KEY'),
+        'url' => env('SMARTCAPTCHA_URL', 'https://smartcaptcha.cloud.yandex.ru/validate'),
+    ],
+
     // Бот в MAX для чеков (https://dev.max.ru). Токен — от @MasterBot, секрет вебхука — любая строка A-Z a-z 0-9 _ -
     'max' => [
         'token' => env('MAX_BOT_TOKEN'),

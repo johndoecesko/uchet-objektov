@@ -2,36 +2,33 @@
 
 namespace Tests\Feature;
 
-use App\Enums\AdvanceType;
-use App\Enums\PaymentSource;
-use App\Enums\UserRole;
 use App\Filament\Resources\AdvanceResource;
 use App\Filament\Resources\EmployeeResource;
+use App\Filament\Resources\EmployeeResource\Widgets\EmployeeStats;
 use App\Filament\Resources\ExpenseCategoryResource;
 use App\Filament\Resources\ExpenseResource;
 use App\Filament\Resources\IncomeResource;
+use App\Filament\Resources\MemberResource;
 use App\Filament\Resources\PayoutResource;
 use App\Filament\Resources\ProjectResource;
-use App\Filament\Resources\MemberResource;
-use App\Filament\Resources\WorkLogResource;
-use App\Models\Advance;
-use App\Models\Employee;
-use App\Models\Expense;
-use App\Models\ExpenseCategory;
-use App\Models\Income;
-use App\Models\Payout;
-use App\Models\Project;
-use App\Models\ProjectBudget;
-use App\Models\User;
-use App\Models\WorkLog;
-use Database\Seeders\DatabaseSeeder;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use App\Filament\Resources\EmployeeResource\Widgets\EmployeeStats;
+use App\Filament\Resources\ProjectResource\Pages\CreateProject;
+use App\Filament\Resources\ProjectResource\Pages\ViewProject;
 use App\Filament\Resources\ProjectResource\Widgets\ProjectPlanFact;
 use App\Filament\Resources\ProjectResource\Widgets\ProjectStats;
+use App\Filament\Resources\WorkLogResource;
 use App\Filament\Widgets\ActiveProjects;
+use App\Filament\Widgets\NeedsAttention;
 use App\Filament\Widgets\OverviewStats;
+use App\Models\Expense;
+use App\Models\ExpenseCategory;
+use App\Models\Project;
+use App\Models\ProjectBudget;
+use App\Models\WorkLog;
+use App\Support\Attention;
+use App\Support\DaData;
 use App\Support\Money;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Livewire\Livewire;
 use Tests\Feature\Concerns\SeedsAccounting;
 use Tests\TestCase;
@@ -124,10 +121,10 @@ class AccountingTest extends TestCase
         Livewire::test(EmployeeStats::class, ['record' => $this->emp])->assertSee('Подотчёт на руках')->assertSee(Money::fmt(5500));
         $this->get(ExpenseResource::getUrl('edit', ['record' => Expense::first()]))->assertOk();
         $this->get(EmployeeResource::getUrl('index'))->assertOk()
-            ->assertSee(\App\Support\Money::fmt(5500))   // долг по зарплате
-            ->assertSee(\App\Support\Money::fmt(3000));  // подотчёт на руках
+            ->assertSee(Money::fmt(5500))   // долг по зарплате
+            ->assertSee(Money::fmt(3000));  // подотчёт на руках
         $this->get(ProjectResource::getUrl('index'))->assertOk()
-            ->assertSee(\App\Support\Money::fmt(135500)); // затраты по объекту
+            ->assertSee(Money::fmt(135500)); // затраты по объекту
         $this->get(WorkLogResource::getUrl('edit', ['record' => WorkLog::first()]))->assertOk();
     }
 
@@ -155,26 +152,26 @@ class AccountingTest extends TestCase
         $this->fillData();
         ProjectBudget::create(['project_id' => $this->project->id, 'expense_category_id' => $this->cat('ГСМ')->id, 'amount' => 1000]);
 
-        $texts = \App\Support\Attention::items()->pluck('text')->implode(' | ');
+        $texts = Attention::items()->pluck('text')->implode(' | ');
         $this->assertStringContainsString('Перерасход по статье «Транспорт и ГСМ»', $texts);
         $this->assertStringContainsString('Не отчитался за '.Money::fmt(3000), $texts);
 
         $this->actingAs($this->admin);
-        Livewire::test(\App\Filament\Widgets\NeedsAttention::class)->assertSee('Иванов И.И.')->assertSee('Школа №5, АПС');
+        Livewire::test(NeedsAttention::class)->assertSee('Иванов И.И.')->assertSee('Школа №5, АПС');
     }
 
     public function test_negative_forecast_goes_to_attention(): void
     {
         $this->fillData();
         $this->project->update(['contract_amount' => 400000]); // план 500000 > договора
-        $texts = \App\Support\Attention::items()->pluck('text')->implode(' | ');
+        $texts = Attention::items()->pluck('text')->implode(' | ');
         $this->assertStringContainsString('По прогнозу объект в убытке: '.Money::fmt(-105000), $texts);
     }
 
     public function test_quick_add_expense_from_project_page(): void
     {
         $this->actingAs($this->admin);
-        Livewire::test(\App\Filament\Resources\ProjectResource\Pages\ViewProject::class, ['record' => $this->project->getKey()])
+        Livewire::test(ViewProject::class, ['record' => $this->project->getKey()])
             ->callAction('addExpense', data: [
                 'date' => '2026-09-10',
                 'expense_category_id' => $this->cat('Материалы')->id,
@@ -193,23 +190,23 @@ class AccountingTest extends TestCase
     public function test_dadata_customer_lookup_fills_requisites(): void
     {
         config(['services.dadata.token' => 'test-token']);
-        \Illuminate\Support\Facades\Http::fake([
-            '*/suggest/party' => \Illuminate\Support\Facades\Http::response(['suggestions' => [[
+        Http::fake([
+            '*/suggest/party' => Http::response(['suggestions' => [[
                 'value' => 'МОУ «СОШ № 5»',
                 'data' => ['inn' => '6452000001', 'kpp' => '645201001', 'ogrn' => '1026402000001',
                     'address' => ['value' => 'г Саратов, ул Примерная, д 1', 'unrestricted_value' => '410000, Саратовская обл, г Саратов, ул Примерная, д 1'],
                     'state' => ['status' => 'ACTIVE']],
             ]]]),
-            '*/suggest/address' => \Illuminate\Support\Facades\Http::response(['suggestions' => [['value' => 'г Саратов, ул Московская, д 10']]]),
+            '*/suggest/address' => Http::response(['suggestions' => [['value' => 'г Саратов, ул Московская, д 10']]]),
         ]);
 
-        $options = \App\Support\DaData::parties('6452000001');
+        $options = DaData::parties('6452000001');
         $this->assertArrayHasKey('6452000001-645201001', $options);
         $this->assertStringContainsString('ИНН 6452000001', $options['6452000001-645201001']);
-        $this->assertSame(['г Саратов, ул Московская, д 10' => 'г Саратов, ул Московская, д 10'], \App\Support\DaData::addresses('Саратов Москов'));
+        $this->assertSame(['г Саратов, ул Московская, д 10' => 'г Саратов, ул Московская, д 10'], DaData::addresses('Саратов Москов'));
 
         $this->actingAs($this->admin);
-        Livewire::test(\App\Filament\Resources\ProjectResource\Pages\CreateProject::class)
+        Livewire::test(CreateProject::class)
             ->fillForm(['customer_lookup' => '6452000001-645201001', 'address_lookup' => 'г Саратов, ул Московская, д 10'])
             ->assertFormSet([
                 'customer' => 'МОУ «СОШ № 5»',
@@ -230,8 +227,8 @@ class AccountingTest extends TestCase
     public function test_dadata_disabled_without_token(): void
     {
         config(['services.dadata.token' => null]);
-        $this->assertFalse(\App\Support\DaData::enabled());
-        $this->assertSame([], \App\Support\DaData::parties('6452000001'));
+        $this->assertFalse(DaData::enabled());
+        $this->assertSame([], DaData::parties('6452000001'));
         $this->actingAs($this->admin)->get(ProjectResource::getUrl('create'))->assertOk()->assertDontSee('Найти заказчика');
     }
 

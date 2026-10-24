@@ -21,9 +21,9 @@ class AdvanceResource extends Resource
 {
     protected static ?string $model = Advance::class;
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-wallet';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-wallet';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Люди и деньги';
+    protected static string|\UnitEnum|null $navigationGroup = 'Люди и деньги';
 
     protected static ?int $navigationSort = 3;
 

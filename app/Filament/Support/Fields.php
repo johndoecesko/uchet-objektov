@@ -29,6 +29,7 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Carbon;
 
 /** Общие поля и колонки, чтобы формы и таблицы были одинаковыми во всех разделах */
 class Fields
@@ -217,10 +218,10 @@ class Fields
             ->indicateUsing(function (array $data): array {
                 $out = [];
                 if ($data['from'] ?? null) {
-                    $out[] = 'с '.\Illuminate\Support\Carbon::parse($data['from'])->format('d.m.Y');
+                    $out[] = 'с '.Carbon::parse($data['from'])->format('d.m.Y');
                 }
                 if ($data['until'] ?? null) {
-                    $out[] = 'по '.\Illuminate\Support\Carbon::parse($data['until'])->format('d.m.Y');
+                    $out[] = 'по '.Carbon::parse($data['until'])->format('d.m.Y');
                 }
 
                 return $out;

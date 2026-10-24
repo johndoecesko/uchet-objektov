@@ -10,6 +10,7 @@ use Filament\Resources\Resource;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class ActivityResource extends Resource
 {
@@ -17,9 +18,9 @@ class ActivityResource extends Resource
 
     protected static ?string $slug = 'history';
 
-    protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-clock';
+    protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-clock';
 
-    protected static string | \UnitEnum | null $navigationGroup = 'Настройки';
+    protected static string|\UnitEnum|null $navigationGroup = 'Настройки';
 
     protected static ?int $navigationSort = 3;
 
@@ -69,7 +70,7 @@ class ActivityResource extends Resource
             ->toolbarActions([]);
     }
 
-    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()->with(['causer', 'subject']);
     }

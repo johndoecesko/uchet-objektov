@@ -39,7 +39,7 @@ class MailFlowTest extends TestCase
         $this->useOrganization(null);
 
         Livewire::test(Register::class)
-            ->fillForm(['name' => 'Новый', 'email' => 'New@Test.ru', 'password' => 'Str0ng-pass!', 'passwordConfirmation' => 'Str0ng-pass!'])
+            ->fillForm(['name' => 'Новый', 'email' => 'New@Test.ru', 'password' => 'Str0ng-pass!', 'passwordConfirmation' => 'Str0ng-pass!', 'terms' => true, 'consent' => true])
             ->call('register')->assertHasNoFormErrors();
         $user = User::where('email', 'new@test.ru')->firstOrFail();
         $this->assertNull($user->email_verified_at);
@@ -136,7 +136,7 @@ class MailFlowTest extends TestCase
 
         config(['auth.registration_enabled' => true]);
         Livewire::test(Register::class)
-            ->fillForm(['name' => 'Коротко', 'email' => 'short@test.ru', 'password' => 'Ab1-xyz', 'passwordConfirmation' => 'Ab1-xyz'])
+            ->fillForm(['name' => 'Коротко', 'email' => 'short@test.ru', 'password' => 'Ab1-xyz', 'passwordConfirmation' => 'Ab1-xyz', 'terms' => true, 'consent' => true])
             ->call('register')->assertHasFormErrors(['password']);
     }
 

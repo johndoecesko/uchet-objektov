@@ -47,7 +47,10 @@ class SmartCaptcha
         }
 
         if ($response->status() !== 200) {
-            Log::warning('SmartCaptcha ответила '.$response->status());
+            // 401/403 — неверный ключ сервера: капча фактически не работает, это надо увидеть в логе
+            $response->status() === 401 || $response->status() === 403
+                ? Log::error('SmartCaptcha: ключ сервера не принят ('.$response->status().'), проверка пропущена')
+                : Log::warning('SmartCaptcha ответила '.$response->status());
 
             return true;
         }

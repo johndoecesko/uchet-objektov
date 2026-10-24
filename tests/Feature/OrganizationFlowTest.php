@@ -234,7 +234,7 @@ class OrganizationFlowTest extends TestCase
 
         $this->actingAs($this->admin);
         $this->get('/go/expenses/create')->assertRedirect('/app/vtoraya/expenses/create');
-        $this->get('/')->assertOk()->assertSee('Открыть учёт');
+        $this->get('/')->assertRedirect('/app');
         $this->get('/app')->assertRedirect('/app/vtoraya');
 
         // открыл организацию — она становится организацией по умолчанию

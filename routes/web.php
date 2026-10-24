@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\Route;
 // Администратор платформы — /platform (App\Providers\Filament\PlatformPanelProvider)
 
 // Публичная часть: страница сервиса и документы (тексты — resources/views/legal, версия — config/legal.php)
-Route::view('/', 'landing')->name('home');
+// Вошедшему главная не нужна — сразу в учёт (в последнюю открытую организацию)
+Route::get('/', fn () => auth()->check() ? redirect('/app') : view('landing'))->name('home');
 Route::view('/privacy', 'legal.privacy')->name('privacy');
 Route::view('/terms', 'legal.terms')->name('terms');
 Route::view('/consent', 'legal.consent')->name('consent');

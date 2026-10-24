@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Auth\EditProfile;
+use App\Filament\Pages\About;
 use App\Filament\Auth\Login;
 use App\Filament\Auth\Register;
 use App\Filament\Auth\RequestPasswordReset;
@@ -70,6 +71,12 @@ class AdminPanelProvider extends PanelProvider
                 "<script>if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js')); }</script>"
             ))
             ->userMenuItems([
+                Action::make('about')
+                    ->label('О программе и помощь')
+                    ->icon('heroicon-o-question-mark-circle')
+                    // страница внутри организации; на экранах без неё (создание организации, подтверждение почты) пункта нет
+                    ->visible(fn () => filament()->getTenant() !== null)
+                    ->url(fn () => filament()->getTenant() ? About::getUrl() : null),
                 Action::make('install')
                     ->label('Установить на телефон')
                     ->icon('heroicon-o-device-phone-mobile')

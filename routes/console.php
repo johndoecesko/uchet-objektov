@@ -17,10 +17,12 @@ Artisan::command('inspire', function () {
 Schedule::call(fn () => touch(storage_path('framework/schedule-heartbeat')))
     ->name('heartbeat')->everyMinute();
 
-// Очередь без постоянного воркера (виртуальный хостинг): разбираем раз в минуту.
-// Срок блокировки 5 минут — если процесс убьют, следующий запуск не будет ждать сутки.
-Schedule::command('queue:work --stop-when-empty --max-time=50 --tries=3')
-    ->everyMinute()->withoutOverlapping(5);
+// Очередь без постоянного воркера (виртуальный хостинг): воркер живёт ~55 с и проверяет очередь каждые 3 с,
+// каждую минуту планировщик запускает новый — письма (подтверждение, сброс пароля) уходят за секунды, а не за минуту.
+// В фоне — чтобы не задерживать остальные задачи планировщика. Блокировка 5 минут — если процесс убьют,
+// следующий запуск не будет ждать сутки.
+Schedule::command('queue:work --max-time=55 --sleep=3 --tries=3')
+    ->everyMinute()->withoutOverlapping(5)->runInBackground();
 
 Schedule::command('app:backup')->dailyAt('03:10')->withoutOverlapping(60);
 

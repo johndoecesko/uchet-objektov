@@ -2,8 +2,10 @@
 
 namespace Tests\Feature;
 
+use App\Enums\UserRole;
 use App\Filament\Auth\Register;
 use App\Filament\Auth\RequestPasswordReset;
+use App\Models\Organization;
 use App\Models\User;
 use App\Support\AuthThrottle;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -54,6 +56,22 @@ class PublicAndRegistrationTest extends TestCase
         $this->get('/install')->assertOk()->assertSee('Как установить на телефон')->assertSee('Safari');
         $this->actingAs(User::create(['name' => 'Вошедший', 'email' => 'in@test.ru', 'password' => 'secret123']))
             ->get('/install')->assertOk()->assertSee('Открыть учёт');
+    }
+
+    public function test_about_page_shows_version_help_and_changelog(): void
+    {
+        $admin = User::create(['name' => 'А', 'email' => 'about@test.ru', 'password' => 'secret123']);
+        $admin->forceFill(['email_verified_at' => now()])->save();
+        $org = Organization::create(['name' => 'Орг']);
+        $org->addMember($admin, UserRole::Admin);
+
+        $this->actingAs($admin)->get('/app/'.$org->slug)->assertOk()->assertSee('О программе и помощь');
+        $this->get('/app/'.$org->slug.'/about')->assertOk()
+            ->assertSee('Версия '.config('releases.0.version'))
+            ->assertSee('С чего начать')->assertSee('Профиль организации')
+            ->assertSee('Как отправлять чеки через MAX?')
+            ->assertSee('Что нового')->assertSee('Версия 1.0')
+            ->assertSee(route('install'), false);
     }
 
     public function test_documents_show_version_and_mark_missing_operator_details(): void

@@ -34,6 +34,8 @@ class SocialAuthController extends Controller
     public function redirect(Request $request, string $provider): RedirectResponse
     {
         $p = $this->provider($provider);
+        // Демо-учётка общая: привязать к ней Яндекс ID / VK ID — отдать её любому гостю (маршрут закрыт и в DemoGuard)
+        abort_if($request->user()?->is_demo, 403);
         $link = $request->boolean('link') && $request->user() !== null;
 
         $state = Str::random(40);
@@ -79,8 +81,8 @@ class SocialAuthController extends Controller
             return $this->login($account->user);
         }
 
-        // Почта подтверждена провайдером и такая учётка есть — это тот же человек
-        if ($social->email && $social->emailVerified && ($user = User::where('email', $social->email)->first())) {
+        // Почта подтверждена провайдером и такая учётка есть — это тот же человек (демо-учётки не в счёт)
+        if ($social->email && $social->emailVerified && ($user = User::where('email', $social->email)->where('is_demo', false)->first())) {
             $this->attach($user, $social);
             if (! $user->email_verified_at) {
                 $user->forceFill(['email_verified_at' => now()])->save();
@@ -164,7 +166,7 @@ class SocialAuthController extends Controller
     private function link(Request $request, int $userId, SocialUser $social, ?SocialAccount $account): RedirectResponse
     {
         $user = $request->user();
-        if (! $user || $user->id !== $userId) {
+        if (! $user || $user->id !== $userId || $user->is_demo) {
             return $this->fail('Привязка не удалась: войдите и попробуйте снова из профиля.');
         }
 
@@ -189,6 +191,9 @@ class SocialAuthController extends Controller
 
     private function login(User $user): RedirectResponse
     {
+        if ($user->is_demo) {
+            return $this->fail('Вход не удался. Попробуйте войти по почте и паролю.');
+        }
         if (! $user->is_active) {
             return $this->fail('Учётная запись отключена. Напишите нам: '.config('app.support_email'));
         }

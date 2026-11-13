@@ -9,6 +9,7 @@ use App\Filament\Resources\ProjectResource\Widgets\ProjectPlanFact;
 use App\Filament\Resources\ProjectResource\Widgets\ProjectStats;
 use App\Filament\Resources\WorkLogResource;
 use App\Filament\Support\Fields;
+use App\Support\Demo\Demo;
 use App\Filament\Widgets\RecordHistory;
 use App\Models\Expense;
 use App\Models\Income;
@@ -64,6 +65,7 @@ class ViewProject extends ViewRecord
                 ->visible(fn () => Fields::isOffice())
                 ->action(function () {
                     abort_unless(Fields::isOffice(), 403);
+                    Demo::guardExport(); // в демо — не больше 10 в час
                     $report = new ProjectReport($this->getRecord());
 
                     return $report->build()->download($report->filename());

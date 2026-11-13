@@ -8,6 +8,10 @@ use App\Models\User;
 use App\Notifications\Auth;
 use App\Policies\ActivityPolicy;
 use App\Support\CurrentOrganization;
+use App\Support\Demo\Demo;
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\RateLimiter;
 use Filament\Auth\Notifications as FilamentAuth;
 use Filament\Events\TenantSet;
 use Illuminate\Auth\Events\Login;
@@ -47,6 +51,18 @@ class AppServiceProvider extends ServiceProvider
         // Модель истории изменений лежит в пакете — политику регистрируем явно
         Gate::policy(Activity::class, ActivityPolicy::class);
 
+        // Демо только для чтения: демо-пользователю разрешено лишь смотреть — белый список закрывает и reorder,
+        // и способности, которых нет в политиках (Filament тогда спрашивает только Gate::before)
+        Gate::before(fn ($user, string $ability) => $user instanceof User && $user->is_demo
+            && ! in_array($ability, ['viewAny', 'view'], true) ? false : null);
+
+        // Вход в демо: с одного IP — 5 в минуту и 30 в час, всего — 600 в час
+        RateLimiter::for('demo-enter', fn (Request $request) => [
+            Limit::perMinute(5)->by('demo-enter-ip-m:'.$request->ip()),
+            Limit::perHour(30)->by('demo-enter-ip-h:'.$request->ip()),
+            Limit::perHour(600)->by('demo-enter-all'),
+        ]);
+
         // Пароль — от 8 символов (регистрация, сброс, профиль). На сервере — ещё и не из утечек (api.pwnedpasswords.com
         // получает только 5 первых знаков хеша; сервис недоступен — проверка пропускается)
         Password::defaults(fn () => app()->isProduction() ? Password::min(8)->max(100)->uncompromised() : Password::min(8)->max(100));
@@ -55,7 +71,7 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(TenantSet::class, function (TenantSet $event) {
             $user = $event->getUser();
             $org = $event->getTenant();
-            if ($user instanceof User && $org instanceof Organization && (int) $user->current_organization_id !== (int) $org->getKey()) {
+            if ($user instanceof User && ! $user->is_demo && $org instanceof Organization && (int) $user->current_organization_id !== (int) $org->getKey()) {
                 User::whereKey($user->getKey())->update(['current_organization_id' => $org->getKey()]);
                 $user->current_organization_id = $org->getKey();
             }
@@ -70,7 +86,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Время последнего входа — для служебной сводки администратора платформы
         Event::listen(Login::class, function (Login $event) {
-            if ($event->user instanceof User) {
+            if ($event->user instanceof User && ! $event->user->is_demo) {
                 User::whereKey($event->user->getKey())->update(['last_login_at' => now()]);
             }
         });

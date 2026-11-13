@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\DemoController;
 use App\Http\Controllers\GoToOrganization;
 use App\Http\Controllers\InvitationController;
 use App\Http\Controllers\SeoController;
@@ -18,6 +19,12 @@ Route::view('/consent', 'legal.consent')->name('consent');
 Route::view('/install', 'install')->name('install');
 Route::get('/robots.txt', [SeoController::class, 'robots']);
 Route::get('/sitemap.xml', [SeoController::class, 'sitemap']);
+
+// Публичное демо без регистрации (App\Support\Demo): выключено (DEMO_ENABLED) — 404
+Route::get('/demo', [DemoController::class, 'show'])->name('demo');
+Route::post('/demo', [DemoController::class, 'enter'])->middleware('throttle:demo-enter')->name('demo.enter');
+Route::post('/demo/register', [DemoController::class, 'register'])->middleware('throttle:30,1')->name('demo.register');
+Route::post('/demo/exit', [DemoController::class, 'exit'])->name('demo.exit');
 
 // «В мою организацию»: /go/expenses/create → /app/{организация}/expenses/create (ярлыки PWA, старые ссылки)
 Route::get('/go/{path?}', GoToOrganization::class)->where('path', '[a-z0-9\-/]*')->name('go');

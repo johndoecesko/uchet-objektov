@@ -6,6 +6,8 @@ use App\Enums\UserRole;
 use App\Models\Concerns\LogsChanges;
 use App\Support\Avatar;
 use App\Support\CurrentOrganization;
+use App\Support\Demo\Demo;
+use App\Support\Demo\DemoReadOnly;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Models\Contracts\HasAvatar;
 use Filament\Models\Contracts\HasDefaultTenant;
@@ -52,6 +54,7 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasDefaul
             'password' => 'hashed',
             'is_active' => 'boolean',
             'is_platform_admin' => 'boolean',
+            'is_demo' => 'boolean', // не в $fillable: персонажей демо создаёт только app:demo-reset --create
             'has_password' => 'boolean',
             'max_user_id' => 'integer',
         ];
@@ -59,6 +62,15 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasDefaul
 
     protected static function booted(): void
     {
+        // Демо-учётки не меняются (иначе, например, смена пароля выкинула бы всех гостей), признак демо — только командой
+        static::saving(function (User $user) {
+            if ($user->isDirty('is_demo') && ($user->exists || $user->is_demo) && ! Demo::writesAllowed()) {
+                throw new DemoReadOnly('Признак демо меняет только app:demo-reset');
+            }
+            Demo::assertWritable($user);
+        });
+        static::deleting(fn (User $user) => Demo::assertWritable($user));
+
         // Сменили или убрали фото — старый файл не копим
         static::saving(fn (User $user) => Avatar::forgetOld($user, 'avatar_path'));
         static::deleted(fn (User $user) => Avatar::forgetOld($user, 'avatar_path', deleted: true));
@@ -74,6 +86,10 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasDefaul
     {
         if (! ($this->is_active ?? true)) {
             return false;
+        }
+        // Демо-учётка — только панель учёта (и только пока демо включено)
+        if ($this->is_demo) {
+            return $panel->getId() === 'admin' && Demo::enabled();
         }
 
         return $panel->getId() === 'platform' ? (bool) $this->is_platform_admin : true;
@@ -153,7 +169,10 @@ class User extends Authenticatable implements FilamentUser, HasAvatar, HasDefaul
     /** Заблокированную организацию пускаем до проверки статуса — там понятное сообщение, а не 404 */
     public function canAccessTenant(Model $tenant): bool
     {
-        return $tenant instanceof Organization && $this->roleIn($tenant) !== null;
+        // демо-учётка — только в демо-организацию, настоящая — только в настоящие
+        return $tenant instanceof Organization
+            && (bool) $tenant->is_demo === (bool) $this->is_demo
+            && $this->roleIn($tenant) !== null;
     }
 
     /** По умолчанию — организация, открытая последней; иначе первая работающая */

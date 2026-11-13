@@ -19,7 +19,9 @@ class InvitationController extends Controller
     {
         $invite = Invitation::acrossOrganizations()->with('organization')->find($invitation);
 
-        if (! $invite || ! $request->hasValidSignature() || ! $invite->isPending() || $invite->organization->isBlocked()) {
+        // Демо: в демо-организацию не приглашают, демо-учётку никуда не добавляют (иначе все гости увидели бы чужую организацию)
+        if (! $invite || ! $request->hasValidSignature() || ! $invite->isPending() || $invite->organization->isBlocked()
+            || $invite->organization->is_demo || $request->user()?->is_demo) {
             return view('invite', ['invite' => null, 'error' => 'Приглашение недействительно: ссылка устарела, уже использована или отозвана. Попросите администратора организации прислать новое.']);
         }
 
@@ -52,6 +54,7 @@ class InvitationController extends Controller
 
         // Принять можно только приглашение, открытое по действующей подписанной ссылке в этой сессии
         abort_unless($invite && $invite->id === $invitation && $invite->allows($user) && ! $invite->organization->isBlocked(), 403);
+        abort_if($user->is_demo || $invite->organization->is_demo, 403);
 
         DB::transaction(function () use ($invite, $user) {
             $locked = Invitation::acrossOrganizations()->lockForUpdate()->find($invite->id);

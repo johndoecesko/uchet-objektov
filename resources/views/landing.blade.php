@@ -85,6 +85,7 @@
                     @if ($open)
                         <a class="btn" href="/app/register">Зарегистрироваться бесплатно</a>
                     @endif
+                    @include('partials.demo-button', ['class' => $open ? 'ghost' : ''])
                     <a class="btn ghost" href="/app/login">Войти</a>
                 @endauth
             </div>
@@ -169,7 +170,9 @@
             @else
                 @if ($open)
                     <a class="btn" href="/app/register">Зарегистрироваться</a>
+                    @include('partials.demo-button')
                 @else
+                    @include('partials.demo-button')
                     <a class="btn" href="mailto:{{ config('app.support_email') }}?subject={{ rawurlencode('Финпрораб: доступ') }}">Попросить доступ</a>
                 @endif
             @endauth

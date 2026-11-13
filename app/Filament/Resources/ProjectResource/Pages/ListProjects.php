@@ -5,6 +5,7 @@ namespace App\Filament\Resources\ProjectResource\Pages;
 use App\Enums\ProjectStatus;
 use App\Filament\Resources\ProjectResource;
 use App\Filament\Support\Fields;
+use App\Support\Demo\Demo;
 use App\Reports\OwnerReport;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
@@ -39,6 +40,7 @@ class ListProjects extends ListRecords
                 ])
                 ->action(function (array $data) {
                     abort_unless(Fields::isOffice(), 403);
+                    Demo::guardExport(); // в демо — не больше 10 в час
                     $statuses = array_map(fn ($s) => $s instanceof ProjectStatus ? $s->value : (string) $s, $data['statuses'] ?? []);
                     $report = new OwnerReport(Carbon::parse($data['from']), Carbon::parse($data['until']), $statuses);
 

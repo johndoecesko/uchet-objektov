@@ -3,6 +3,7 @@
 namespace App\Filament\Auth;
 
 use App\Support\Avatar;
+use App\Support\Demo\Demo;
 use App\Support\Social\Provider;
 use Filament\Actions\Action;
 use Filament\Auth\Pages\EditProfile as BaseEditProfile;
@@ -51,6 +52,13 @@ class EditProfile extends BaseEditProfile
 
     public function mount(): void
     {
+        // Демо-учётка общая: профиль не открывается (маршрут закрыт и в DemoGuard)
+        if (Demo::active()) {
+            Notification::make()->title('В демо профиль недоступен')->warning()->send();
+
+            throw new HttpResponseException(new RedirectResponse(url('/app/'.Demo::slug())));
+        }
+
         parent::mount();
 
         // Итог привязки Яндекс ID / VK ID (SocialAuthController возвращает сюда)
@@ -91,6 +99,13 @@ class EditProfile extends BaseEditProfile
         return $this->getUser()->has_password
             ? parent::getCurrentPasswordFormComponent()
             : TextInput::make('currentPassword')->hidden()->dehydrated(false);
+    }
+
+    public function save(): void
+    {
+        abort_if(Demo::active(), 403, 'В демо можно только смотреть');
+
+        parent::save();
     }
 
     protected function handleRecordUpdate(Model $record, #[SensitiveParameter] array $data): Model

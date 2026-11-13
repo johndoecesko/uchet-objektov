@@ -14,6 +14,8 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->prepend(\App\Http\Middleware\CanonicalHost::class);
         $middleware->append(\App\Http\Middleware\SecurityHeaders::class);
+        // Демо только для чтения: закрытые маршруты, noindex, выход при выключенном демо (и в панели — AdminPanelProvider)
+        $middleware->appendToGroup('web', \App\Http\Middleware\DemoGuard::class);
         $middleware->redirectGuestsTo('/app/login');
     })
     ->withExceptions(function (Exceptions $exceptions): void {

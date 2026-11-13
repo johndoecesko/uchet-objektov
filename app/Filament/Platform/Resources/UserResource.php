@@ -34,6 +34,9 @@ class UserResource extends Resource
             ->columns([
                 TextColumn::make('id')->label('№')->sortable(),
                 TextColumn::make('name')->label('Имя')->searchable(),
+                TextColumn::make('demo')->label('Демо')->badge()->color('warning')->placeholder('')
+                    ->state(fn (User $u) => $u->is_demo ? 'Демо' : null)
+                    ->tooltip(fn (User $u) => $u->is_demo ? 'Персонаж демо: входа по паролю нет' : null),
                 TextColumn::make('email')->label('Email')->searchable()
                     ->description(fn (User $u) => $u->email_verified_at ? null : 'почта не подтверждена'),
                 TextColumn::make('organizations.name')->label('Организации')->listWithLineBreaks()->limitList(3)->placeholder('—'),
@@ -46,15 +49,16 @@ class UserResource extends Resource
             ->defaultSort('id', 'desc')
             ->recordActions([
                 Action::make('block')->label('Заблокировать')->icon('heroicon-o-lock-closed')->color('danger')
-                    ->visible(fn (User $u) => $u->is_active && $u->id !== auth()->id())
+                    ->visible(fn (User $u) => $u->is_active && $u->id !== auth()->id() && ! $u->is_demo)
                     ->requiresConfirmation()
                     ->modalDescription('Человек не сможет войти ни в одну организацию, бот MAX перестанет принимать от него чеки.')
                     ->action(function (User $u) {
+                        abort_if($u->is_demo, 403, 'Демо отключается через DEMO_ENABLED');
                         $u->update(['is_active' => false]);
                         Notification::make()->title("{$u->email} заблокирован")->success()->send();
                     }),
                 Action::make('unblock')->label('Разблокировать')->icon('heroicon-o-lock-open')->color('success')
-                    ->visible(fn (User $u) => ! $u->is_active)
+                    ->visible(fn (User $u) => ! $u->is_active && ! $u->is_demo)
                     ->requiresConfirmation()
                     ->action(function (User $u) {
                         $u->update(['is_active' => true]);

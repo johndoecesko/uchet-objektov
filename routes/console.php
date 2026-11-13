@@ -28,3 +28,9 @@ Schedule::command('app:backup')->dailyAt('03:10')->withoutOverlapping(60);
 
 // История изменений: храним год (config/activitylog.php), чистим раз в неделю
 Schedule::command('activitylog:clean --force')->weeklyOn(0, '03:40');
+
+// Публичное демо: данные пересоздаются каждую ночь (даты «свежие», правок гостей нет — демо только для чтения),
+// старые демо-сессии чистятся раз в час. Выключено (DEMO_ENABLED) — не идёт.
+Schedule::command('app:demo-reset')->dailyAt('04:30')->timezone('Europe/Moscow')
+    ->withoutOverlapping(30)->when(fn () => (bool) config('demo.enabled'));
+Schedule::call(fn () => \App\Support\Demo\Demo::pruneSessions())->name('demo-sessions')->hourly();

@@ -4,6 +4,7 @@ namespace App\Models\Concerns;
 
 use App\Models\Organization;
 use App\Support\CurrentOrganization;
+use App\Support\Demo\Demo;
 use App\Support\OrganizationMismatch;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -36,8 +37,19 @@ trait BelongsToOrganization
                     throw new OrganizationMismatch('Запись '.class_basename($model).' создаётся без организации');
                 }
             }
+            // Демо только для чтения: после того как организация записи известна
+            Demo::assertWritable($model);
             $model->assertReferencesInOrganization();
         });
+
+        // Удаление (в корзину и навсегда), восстановление из корзины — тоже запись
+        static::deleting(fn (Model $model) => Demo::assertWritable($model));
+        if (method_exists(static::class, 'restoring')) {
+            static::restoring(fn (Model $model) => Demo::assertWritable($model));
+        }
+        if (method_exists(static::class, 'forceDeleting')) {
+            static::forceDeleting(fn (Model $model) => Demo::assertWritable($model));
+        }
     }
 
     public function organization(): BelongsTo

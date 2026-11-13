@@ -107,6 +107,7 @@ class WorkLogResource extends Resource
         return [
             'index' => Pages\ListWorkLogs::route('/'),
             'create' => Pages\CreateWorkLog::route('/create'),
+            'view' => Pages\ViewWorkLog::route('/{record}'),
             'edit' => Pages\EditWorkLog::route('/{record}/edit'),
         ];
     }

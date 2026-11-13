@@ -5,7 +5,10 @@ namespace App\Models;
 use App\Enums\OrganizationStatus;
 use App\Enums\UserRole;
 use App\Support\Avatar;
+use App\Support\Demo\Demo;
+use App\Support\Demo\DemoReadOnly;
 use Filament\Models\Contracts\HasAvatar;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -32,7 +35,7 @@ class Organization extends Model implements HasAvatar
     public const RESERVED_SLUGS = [
         'login', 'logout', 'register', 'registration', 'new', 'profile', 'password-reset', 'reset-password',
         'email-verification', 'email-change-verification', 'multi-factor-authentication', 'invite', 'api',
-        'livewire', 'platform', 'app', 'go', 'auth', 'settings', 'admin', 'storage', 'up',
+        'livewire', 'platform', 'app', 'go', 'auth', 'settings', 'admin', 'storage', 'up', 'demo',
     ];
 
     protected $fillable = ['name', 'slug', 'inn', 'status', 'logo_path'];
@@ -41,7 +44,8 @@ class Organization extends Model implements HasAvatar
 
     protected function casts(): array
     {
-        return ['status' => OrganizationStatus::class];
+        // is_demo — не в $fillable: ставит только пересоздание демо (App\Support\Demo\DemoReset)
+        return ['status' => OrganizationStatus::class, 'is_demo' => 'boolean'];
     }
 
     /** Логотип в переключателе организаций; нет логотипа — буквы названия */
@@ -61,8 +65,22 @@ class Organization extends Model implements HasAvatar
 
         // Новая организация получает стандартный справочник статей затрат
         static::created(fn (Organization $org) => $org->seedDefaults());
+        // Демо: организацию не меняет никто, кроме пересоздания; признак демо не ставится и не снимается вручную
+        static::saving(function (Organization $org) {
+            if ($org->isDirty('is_demo') && ($org->exists || $org->is_demo) && ! Demo::writesAllowed()) {
+                throw new DemoReadOnly('Признак демо меняет только app:demo-reset');
+            }
+            Demo::assertWritable($org);
+        });
+        static::deleting(fn (Organization $org) => Demo::assertWritable($org));
         static::saving(fn (Organization $org) => Avatar::forgetOld($org, 'logo_path'));
         static::deleted(fn (Organization $org) => Avatar::forgetOld($org, 'logo_path', deleted: true));
+    }
+
+    /** Настоящие организации (без демо) — для статистики и служебных выборок */
+    public function scopeReal(Builder $query): Builder
+    {
+        return $query->where($query->qualifyColumn('is_demo'), false);
     }
 
     public function seedDefaults(): void

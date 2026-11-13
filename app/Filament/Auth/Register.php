@@ -5,6 +5,7 @@ namespace App\Filament\Auth;
 use App\Filament\Forms\SmartCaptchaField;
 use App\Models\User;
 use App\Support\AuthThrottle;
+use App\Support\PlatformCounter;
 use App\Support\Registration;
 use Filament\Auth\Http\Responses\Contracts\RegistrationResponse;
 use Filament\Auth\Pages\Register as BaseRegister;
@@ -119,7 +120,15 @@ class Register extends BaseRegister
         if ($invitation?->email && $invitation->allows($user)) {
             $user->forceFill(['email_verified_at' => now()]);
         }
+        // Пришёл из демо (кнопка «Зарегистрироваться» на плашке) — для сводки в /platform
+        $source = session()->pull('signup_source');
+        if ($source === 'demo') {
+            $user->forceFill(['signup_source' => 'demo']);
+        }
         $user->save();
+        if ($source === 'demo') {
+            PlatformCounter::hit('demo.registered');
+        }
 
         return $user;
     }

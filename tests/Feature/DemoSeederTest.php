@@ -26,7 +26,7 @@ class DemoSeederTest extends TestCase
     private function useDemo(): void
     {
         Filament::setCurrentPanel(Filament::getPanel('admin'));
-        Filament::setTenant(Organization::where('slug', 'demo')->firstOrFail(), isQuiet: true);
+        Filament::setTenant(Organization::where('slug', DemoSeeder::SLUG)->firstOrFail(), isQuiet: true);
     }
 
     public function test_demo_data_tells_a_story(): void
@@ -67,8 +67,8 @@ class DemoSeederTest extends TestCase
         $this->assertTrue(\Illuminate\Support\Facades\Hash::check(DemoSeeder::PASSWORD, $admin->password));
 
         $this->actingAs($admin);
-        $this->get('/app')->assertRedirect('/app/demo');
-        $this->get('/app/demo')->assertOk();
+        $this->get('/app')->assertRedirect('/app/demo-montazh');
+        $this->get('/app/demo-montazh')->assertOk();
         Livewire::test(ActiveProjects::class)->assertSee('Школа № 12');
         Livewire::test(NeedsAttention::class)->assertSee('Игорь Монтажов');
         $this->get(ProjectResource::getUrl('view', ['record' => Project::first()]))->assertOk();
@@ -80,6 +80,6 @@ class DemoSeederTest extends TestCase
 
         $foreman = User::where('email', 'foreman@demo.local')->firstOrFail();
         $this->actingAs($foreman);
-        $this->get('/app/demo')->assertOk()->assertSee('Мои расходы за месяц');
+        $this->get('/app/demo-montazh')->assertOk()->assertSee('Мои расходы за месяц');
     }
 }

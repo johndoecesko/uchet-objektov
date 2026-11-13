@@ -90,6 +90,7 @@ class IncomeResource extends Resource
         return [
             'index' => Pages\ListIncomes::route('/'),
             'create' => Pages\CreateIncome::route('/create'),
+            'view' => Pages\ViewIncome::route('/{record}'),
             'edit' => Pages\EditIncome::route('/{record}/edit'),
         ];
     }

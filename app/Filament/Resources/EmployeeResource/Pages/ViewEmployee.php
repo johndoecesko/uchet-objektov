@@ -5,6 +5,7 @@ namespace App\Filament\Resources\EmployeeResource\Pages;
 use App\Filament\Resources\EmployeeResource;
 use App\Filament\Resources\EmployeeResource\Widgets\EmployeeStats;
 use App\Filament\Support\Fields;
+use App\Support\Demo\Demo;
 use App\Filament\Widgets\RecordHistory;
 use App\Reports\PayslipReport;
 use Filament\Actions\Action;
@@ -40,6 +41,7 @@ class ViewEmployee extends ViewRecord
                 ])
                 ->action(function (array $data) {
                     abort_unless(Fields::isOffice(), 403);
+                    Demo::guardExport(); // в демо — не больше 10 в час
                     $report = new PayslipReport($this->getRecord(), Carbon::parse($data['from']), Carbon::parse($data['until']));
 
                     return $report->build()->download($report->filename());

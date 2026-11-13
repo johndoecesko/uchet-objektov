@@ -30,6 +30,7 @@ class SeoController extends Controller
             'Disallow: /go/',
             'Disallow: /livewire/',
             'Disallow: /api/',
+            'Disallow: /demo',
             '',
             'Sitemap: '.url('/sitemap.xml'),
         ];

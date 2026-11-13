@@ -88,6 +88,7 @@ class AdvanceResource extends Resource
         return [
             'index' => Pages\ListAdvances::route('/'),
             'create' => Pages\CreateAdvance::route('/create'),
+            'view' => Pages\ViewAdvance::route('/{record}'),
             'edit' => Pages\EditAdvance::route('/{record}/edit'),
         ];
     }

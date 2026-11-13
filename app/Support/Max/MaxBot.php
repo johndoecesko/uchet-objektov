@@ -45,6 +45,7 @@ class MaxBot
     /** Одноразовый код привязки (6 символов, 10 минут) */
     public static function linkCode(User $user): string
     {
+        abort_if($user->is_demo, 403, 'В демо MAX не подключается');
         do {
             $code = Str::upper(Str::random(6));
             $code = strtr($code, ['0' => 'X', 'O' => 'Y', '1' => 'Z', 'I' => 'W', 'L' => 'V']);
@@ -83,7 +84,7 @@ class MaxBot
         $text = trim((string) ($message['body']['text'] ?? ''));
         $user = User::where('max_user_id', $maxId)->first();
 
-        if (! $user || ! $user->is_active) {
+        if (! $user || ! $user->is_active || $user->is_demo) {
             $this->unlinked($maxId, $text, $type);
 
             return;
@@ -193,6 +194,7 @@ class MaxBot
         return $user->organizations()
             ->wherePivot('is_active', true)
             ->where('organizations.status', OrganizationStatus::Active->value)
+            ->where('organizations.is_demo', false)
             ->orderBy('name')
             ->get();
     }
@@ -271,7 +273,7 @@ class MaxBot
         $code = Str::upper(preg_replace('/\s+/', '', $text));
         if ($type === 'message_created' && preg_match('/^[A-Z0-9]{6}$/', $code) && ($userId = Cache::pull('max:link:'.$code))) {
             $user = User::find($userId);
-            if ($user && $user->is_active) {
+            if ($user && $user->is_active && ! $user->is_demo) {
                 DB::transaction(function () use ($user, $maxId) {
                     User::where('max_user_id', $maxId)->update(['max_user_id' => null]);
                     $user->forceFill(['max_user_id' => $maxId])->save();

@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Filament\Actions\ConnectMaxAction;
 use App\Filament\InitialsAvatarProvider;
 use App\Filament\Auth\EditProfile;
 use App\Filament\Pages\About;
@@ -10,16 +11,15 @@ use App\Filament\Auth\Register;
 use App\Filament\Auth\RequestPasswordReset;
 use App\Filament\Pages\Tenancy\EditOrganizationProfile;
 use App\Filament\Pages\Tenancy\RegisterOrganization;
+use App\Http\Middleware\DemoGuard;
 use App\Http\Middleware\EnsureOrganizationIsActive;
 use App\Models\Organization;
-use App\Support\Max\MaxApi;
-use App\Support\Max\MaxBot;
+use App\Support\Demo\Demo;
 use Filament\Actions\Action;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Notifications\Notification;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
@@ -73,6 +73,8 @@ class AdminPanelProvider extends PanelProvider
             // Вход и регистрация через Яндекс ID / VK ID — под формой (кнопки есть, только если заданы ключи)
             ->renderHook(PanelsRenderHook::AUTH_LOGIN_FORM_AFTER, fn () => view('filament.social-buttons', ['label' => 'Войти']))
             ->renderHook(PanelsRenderHook::AUTH_REGISTER_FORM_AFTER, fn () => view('filament.social-buttons', ['label' => 'Зарегистрироваться']))
+            // Демо: плашка «Это демо — зарегистрируйтесь…» над всеми страницами
+            ->renderHook(PanelsRenderHook::BODY_START, fn () => Demo::active() ? view('filament.demo-banner') : '')
             ->renderHook(PanelsRenderHook::BODY_END, fn (): HtmlString => new HtmlString(
                 "<script>if ('serviceWorker' in navigator) { window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js')); }</script>"
             ))
@@ -87,29 +89,10 @@ class AdminPanelProvider extends PanelProvider
                     ->label('Установить на телефон')
                     ->icon('heroicon-o-device-phone-mobile')
                     ->url('/install', shouldOpenInNewTab: true),
-                // Бот MAX: одноразовый код для привязки (показывается, только если бот настроен)
-                Action::make('maxLink')
-                    ->label(fn () => auth()->user()?->max_user_id ? 'MAX подключён — отключить' : 'Подключить MAX')
-                    ->icon('heroicon-o-chat-bubble-left-right')
-                    ->visible(fn () => MaxApi::enabled())
-                    ->requiresConfirmation(fn () => (bool) auth()->user()?->max_user_id)
-                    ->modalHeading('Отключить MAX?')
-                    ->modalDescription('Бот перестанет принимать от вас чеки, пока не подключите снова.')
-                    ->action(function () {
-                        $user = auth()->user();
-                        if ($user->max_user_id) {
-                            $user->forceFill(['max_user_id' => null])->save();
-                            Notification::make()->title('MAX отключён')->success()->send();
-
-                            return;
-                        }
-                        Notification::make()
-                            ->title('Код для MAX: '.MaxBot::linkCode($user))
-                            ->body('Отправьте этот код боту в MAX в течение 10 минут. После этого присылайте боту фото чеков.')
-                            ->persistent()
-                            ->success()
-                            ->send();
-                    }),
+                // Бот MAX: одноразовый код для привязки (показывается, только если бот настроен; в демо — нет)
+                ConnectMaxAction::make(),
+                // Профиль (имя, почта, пароль, соцсети) демо-учётке не нужен — она общая
+                'profile' => fn (Action $action) => $action->hidden(fn () => Demo::active()),
             ])
             ->colors(['primary' => Color::Blue])
             ->maxContentWidth('full')
@@ -124,6 +107,9 @@ class AdminPanelProvider extends PanelProvider
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
+                // сразу после сессии: Laravel сортирует middleware по приоритету и ставит Authenticate перед
+                // AuthenticateSession — DemoGuard должен успеть разлогинить демо раньше проверки canAccessPanel
+                DemoGuard::class,
                 AuthenticateSession::class,
                 ShareErrorsFromSession::class,
                 VerifyCsrfToken::class,

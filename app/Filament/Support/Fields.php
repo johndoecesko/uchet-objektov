@@ -18,6 +18,7 @@ use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
@@ -28,6 +29,7 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 /** Общие поля и колонки, чтобы формы и таблицы были одинаковыми во всех разделах */
@@ -239,10 +241,16 @@ class Fields
         return self::isOffice() ? $query->withoutGlobalScopes([SoftDeletingScope::class]) : $query;
     }
 
-    /** Действия строки для разделов с корзиной */
+    /**
+     * Действия строки для разделов с корзиной. «Просмотр» — только тем, кому правка недоступна (демо):
+     * клик по строке у остальных по-прежнему открывает правку
+     */
     public static function recordActions(): array
     {
-        return [EditAction::make(), DeleteAction::make(), RestoreAction::make(), ForceDeleteAction::make()];
+        return [
+            ViewAction::make()->hidden(fn (Model $record) => (bool) auth()->user()?->can('update', $record)),
+            EditAction::make(), DeleteAction::make(), RestoreAction::make(), ForceDeleteAction::make(),
+        ];
     }
 
     public static function bulkActions(): array

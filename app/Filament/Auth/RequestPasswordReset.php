@@ -8,13 +8,19 @@ use Filament\Auth\Pages\PasswordReset\RequestPasswordReset as BaseRequestPasswor
 use Filament\Notifications\Notification;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Facades\Password;
+use SensitiveParameter;
 
 /**
  * «Забыли пароль?»: на неизвестную почту отвечаем так же, как на известную — список учёток не перебрать.
- * Капча и суточный лимит с IP.
+ * Капча и суточный лимит с IP. Демо-учёткам письмо не уходит (ищем только среди настоящих), ответ — как обычно.
  */
 class RequestPasswordReset extends BaseRequestPasswordReset
 {
+    protected function getCredentialsFromFormData(#[SensitiveParameter] array $data): array
+    {
+        return [...parent::getCredentialsFromFormData($data), 'is_demo' => false];
+    }
+
     public function request(): void
     {
         if (AuthThrottle::exceeded('password-reset')) {

@@ -87,6 +87,7 @@ class PayoutResource extends Resource
         return [
             'index' => Pages\ListPayouts::route('/'),
             'create' => Pages\CreatePayout::route('/create'),
+            'view' => Pages\ViewPayout::route('/{record}'),
             'edit' => Pages\EditPayout::route('/{record}/edit'),
         ];
     }

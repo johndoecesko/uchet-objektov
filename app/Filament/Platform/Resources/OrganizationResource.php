@@ -37,6 +37,9 @@ class OrganizationResource extends Resource
                 TextColumn::make('name')->label('Организация')->searchable(['name', 'inn', 'slug'])->wrap()
                     ->description(fn (Organization $o) => trim(($o->inn ? 'ИНН '.$o->inn.' · ' : '').'/app/'.$o->slug)),
                 TextColumn::make('status')->label('Статус')->badge(),
+                TextColumn::make('demo')->label('Демо')->badge()->color('warning')->placeholder('')
+                    ->state(fn (Organization $o) => $o->is_demo ? 'Демо' : null)
+                    ->tooltip(fn (Organization $o) => $o->is_demo ? 'Общее демо только для чтения, данные пересоздаются каждую ночь' : null),
                 TextColumn::make('creator.email')->label('Создал')->placeholder('—')->toggleable(),
                 TextColumn::make('memberships_count')->label('Участников')->alignEnd()->sortable(),
                 TextColumn::make('projects_count')->label('Объектов')->alignEnd()->sortable(),
@@ -48,15 +51,16 @@ class OrganizationResource extends Resource
             ->defaultSort('id', 'desc')
             ->recordActions([
                 Action::make('block')->label('Заблокировать')->icon('heroicon-o-lock-closed')->color('danger')
-                    ->visible(fn (Organization $o) => ! $o->isBlocked())
+                    ->visible(fn (Organization $o) => ! $o->isBlocked() && ! $o->is_demo)
                     ->requiresConfirmation()
                     ->modalDescription('Участники не смогут открыть организацию, бот перестанет принимать чеки в неё. Данные сохраняются.')
                     ->action(function (Organization $o) {
+                        abort_if($o->is_demo, 403, 'Демо отключается через DEMO_ENABLED');
                         $o->update(['status' => OrganizationStatus::Blocked]);
                         Notification::make()->title("«{$o->name}» заблокирована")->success()->send();
                     }),
                 Action::make('unblock')->label('Разблокировать')->icon('heroicon-o-lock-open')->color('success')
-                    ->visible(fn (Organization $o) => $o->isBlocked())
+                    ->visible(fn (Organization $o) => $o->isBlocked() && ! $o->is_demo)
                     ->requiresConfirmation()
                     ->action(function (Organization $o) {
                         $o->update(['status' => OrganizationStatus::Active]);

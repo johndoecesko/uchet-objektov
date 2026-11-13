@@ -39,10 +39,13 @@ class PendingInvitations extends TableWidget
                 TextColumn::make('expires_at')->label('Действует до')->dateTime('d.m.Y H:i'),
             ])
             ->defaultSort('id', 'desc')
+            // У виджета-таблицы нет ресурса: без authorize() действия не проверяются политикой вовсе
             ->recordActions([
                 Action::make('link')->label('Ссылка')->icon('heroicon-o-link')->color('gray')
+                    ->authorize(fn (Invitation $record) => auth()->user()?->can('update', $record) ?? false)
                     ->action(fn (Invitation $record) => ListMembers::linkNotification($record)->send()),
                 DeleteAction::make()->label('Отозвать')->modalHeading('Отозвать приглашение?')
+                    ->authorize(fn (Invitation $record) => auth()->user()?->can('delete', $record) ?? false)
                     ->successNotificationTitle('Приглашение отозвано'),
             ])
             ->emptyStateHeading('Нет неотвеченных приглашений')

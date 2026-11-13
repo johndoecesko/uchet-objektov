@@ -91,4 +91,13 @@ abstract class RolePolicy
     {
         return $this->office($user);
     }
+
+    /**
+     * Перестановка строк таблицы (статьи затрат). Без этого метода Filament смотрит только на Gate::before
+     * и при его молчании разрешает, а сама перестановка идёт запросом мимо событий моделей.
+     */
+    public function reorder(User $user): bool
+    {
+        return $this->office($user);
+    }
 }

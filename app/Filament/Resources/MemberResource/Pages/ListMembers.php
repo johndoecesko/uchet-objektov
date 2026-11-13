@@ -30,13 +30,13 @@ class ListMembers extends ListRecords
                 ->label('Ссылка-приглашение')
                 ->icon('heroicon-o-link')
                 ->color('gray')
-                ->visible(fn () => auth()->user()->isAdmin())
+                ->authorize(fn () => auth()->user()?->can('create', Invitation::class) ?? false)
                 ->modalHeading('Ссылка-приглашение')
                 ->modalDescription('Одноразовая ссылка на 7 дней — отправьте её в мессенджер. Кто первым откроет и войдёт (или зарегистрируется), станет участником.')
                 ->modalSubmitActionLabel('Создать ссылку')
                 ->schema([$role])
                 ->action(function (array $data) {
-                    abort_unless(auth()->user()->isAdmin(), 403);
+                    abort_unless(auth()->user()->can('create', Invitation::class), 403);
                     $invite = Invitation::create(['role' => $data['role']]);
                     self::linkNotification($invite)->send();
                     $this->dispatch('invitations-changed');
@@ -44,7 +44,7 @@ class ListMembers extends ListRecords
             Action::make('inviteEmail')
                 ->label('Пригласить по почте')
                 ->icon('heroicon-o-envelope')
-                ->visible(fn () => auth()->user()->isAdmin())
+                ->authorize(fn () => auth()->user()?->can('create', Invitation::class) ?? false)
                 ->modalHeading('Пригласить по почте')
                 ->modalDescription('Придёт письмо со ссылкой на 7 дней. Есть учётная запись — войдёт и попадёт в организацию; нет — зарегистрируется с этой почтой.')
                 ->modalSubmitActionLabel('Отправить приглашение')
@@ -53,7 +53,7 @@ class ListMembers extends ListRecords
                     $role,
                 ])
                 ->action(function (array $data) {
-                    abort_unless(auth()->user()->isAdmin(), 403);
+                    abort_unless(auth()->user()->can('create', Invitation::class), 403);
                     $invite = Invitation::create(['email' => $data['email'], 'role' => $data['role']]);
                     Notifier::route('mail', $invite->email)->notify(new OrganizationInvitation($invite, app(CurrentOrganization::class)->get(), auth()->user()));
                     Notification::make()->title('Приглашение отправлено на '.$invite->email)->success()->send();

@@ -21,9 +21,10 @@ class EditOrganizationProfile extends EditTenantProfile
         return 'Профиль организации';
     }
 
+    /** Через политику (OrganizationPolicy::update), а не по роли — так её закрывают и общие запреты (Gate::before) */
     public static function canView(Model $tenant): bool
     {
-        return (bool) auth()->user()?->isAdmin();
+        return (bool) auth()->user()?->can('update', $tenant);
     }
 
     /** Поля организации — общие для создания и профиля */

@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\Setting;
 use Filament\Actions\Action;
+use Filament\Facades\Filament;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -13,7 +14,7 @@ use Filament\Schemas\Components\Form;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
-/** Настройки (только админ): пороги блока «Требует внимания» */
+/** Настройки (видит админ, меняет — кому разрешает OrganizationPolicy::update): пороги блока «Требует внимания» */
 class Settings extends Page
 {
     protected static string | \BackedEnum | null $navigationIcon = 'heroicon-o-adjustments-horizontal';
@@ -36,6 +37,14 @@ class Settings extends Page
         return (bool) auth()->user()?->isAdmin();
     }
 
+    /** Сохранять — по политике организации, а не по роли (в демо страница только для просмотра) */
+    public static function canEdit(): bool
+    {
+        $tenant = Filament::getTenant();
+
+        return $tenant !== null && (bool) auth()->user()?->can('update', $tenant);
+    }
+
     public function mount(): void
     {
         $this->form->fill([
@@ -48,6 +57,7 @@ class Settings extends Page
     {
         return $schema
             ->statePath('data')
+            ->disabled(fn () => ! static::canEdit())
             ->components([
                 Section::make('Требует внимания')
                     ->description('Когда объект или сотрудник попадает в блок «Требует внимания» на главной')
@@ -73,13 +83,13 @@ class Settings extends Page
             Form::make([EmbeddedSchema::make('form')])
                 ->id('form')
                 ->livewireSubmitHandler('save')
-                ->footer([Actions::make([Action::make('save')->label('Сохранить')->submit('save')])->key('form-actions')]),
+                ->footer([Actions::make([Action::make('save')->label('Сохранить')->submit('save')->visible(fn () => static::canEdit())])->key('form-actions')]),
         ]);
     }
 
     public function save(): void
     {
-        abort_unless(static::canAccess(), 403);
+        abort_unless(static::canAccess() && static::canEdit(), 403);
         $data = $this->form->getState();
         Setting::put('attention.advance_days', (int) $data['advance_days']);
         Setting::put('attention.low_margin', round((float) $data['low_margin'], 1));

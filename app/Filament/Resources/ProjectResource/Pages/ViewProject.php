@@ -28,13 +28,18 @@ class ViewProject extends ViewRecord
         return $this->getRecord()->name;
     }
 
-    /** Кнопка «добавить» в шапке объекта: форма выезжает справа, объект подставляется сам */
+    /**
+     * Кнопка «добавить» в шапке объекта: форма выезжает справа, объект подставляется сам.
+     * Права — по создаваемой модели: без authorize() Filament проверил бы ProjectResource::canCreate
+     * (страница принадлежит ресурсу объектов), и прораб не увидел бы кнопку «Расход».
+     */
     protected function quickAdd(string $name, string $label, string $icon, string $model, array $fields, string $relation): CreateAction
     {
         return CreateAction::make($name)
             ->label($label)
             ->icon($icon)
             ->model($model)
+            ->authorize(fn () => auth()->user()?->can('create', $model) ?? false)
             ->relationship(fn () => $this->getRecord()->{$relation}())
             ->schema($fields)
             ->slideOver()
@@ -46,14 +51,11 @@ class ViewProject extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            $this->quickAdd('addExpense', 'Расход', 'heroicon-o-plus', Expense::class, ExpenseResource::formFields(withProject: false), 'expenses')
-                ->visible(fn () => auth()->user()->can('create', Expense::class)),
+            $this->quickAdd('addExpense', 'Расход', 'heroicon-o-plus', Expense::class, ExpenseResource::formFields(withProject: false), 'expenses'),
             $this->quickAdd('addWork', 'Работа', 'heroicon-o-plus', WorkLog::class, WorkLogResource::formFields(withProject: false), 'workLogs')
-                ->color('gray')
-                ->visible(fn () => auth()->user()->can('create', WorkLog::class)),
+                ->color('gray'),
             $this->quickAdd('addIncome', 'Поступление', 'heroicon-o-plus', Income::class, IncomeResource::formFields(withProject: false), 'incomes')
-                ->color('gray')
-                ->visible(fn () => Fields::isOffice()),
+                ->color('gray'),
             Action::make('exportXlsx')
                 ->label('Excel')
                 ->icon('heroicon-o-arrow-down-tray')

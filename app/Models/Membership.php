@@ -23,7 +23,8 @@ class Membership extends Model
 
     protected function casts(): array
     {
-        return ['role' => UserRole::class, 'is_active' => 'boolean'];
+        // onboarding_hidden_at — «Скрыть» чек-лист «Первые шаги» (не в $fillable, пишет App\Support\Onboarding::hide)
+        return ['role' => UserRole::class, 'is_active' => 'boolean', 'onboarding_hidden_at' => 'datetime'];
     }
 
     protected function activityExcept(): array

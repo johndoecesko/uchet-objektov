@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Actions\CreateAction;
 use App\Enums\AdvanceType;
 use App\Enums\PayMethod;
 use App\Filament\Resources\AdvanceResource\Pages;
@@ -70,7 +71,9 @@ class AdvanceResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table
+        return Fields::emptyState($table, 'Подотчёта пока нет',
+            'Выдача денег под отчёт и возвраты. Расходы, оплаченные из подотчёта, уменьшают остаток; долгий остаток попадёт в «Требует внимания».',
+            'heroicon-o-arrows-right-left', [CreateAction::make()->label('Выдать под отчёт')])
             ->columns(static::tableColumns())
             ->filters([Fields::periodFilter(), Fields::employeeFilter(), SelectFilter::make('type')->label('Операция')->options(AdvanceType::class), Fields::trashedFilter()])
             ->defaultSort('date', 'desc')

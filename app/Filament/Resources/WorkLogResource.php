@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Actions\CreateAction;
 use App\Filament\Resources\WorkLogResource\Pages;
 use App\Filament\Support\Fields;
 use App\Models\Employee;
@@ -87,7 +88,9 @@ class WorkLogResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table
+        return Fields::emptyState($table, 'Журнал работ пуст',
+            'Кто, где и сколько дней работал. Сумма = дни × ставка сотрудника — из журнала считается зарплата и затраты объекта.',
+            'heroicon-o-clipboard-document-list', [CreateAction::make()->label('Записать работу')])
             ->columns(static::tableColumns())
             ->filters([Fields::periodFilter(), Fields::projectFilter(), Fields::employeeFilter(), Fields::trashedFilter()])
             ->defaultSort('date', 'desc')

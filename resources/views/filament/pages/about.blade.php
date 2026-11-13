@@ -30,6 +30,10 @@
         </x-filament::section>
 
         <x-filament::section heading="С чего начать">
+            @unless (\App\Support\Demo\Demo::active())
+                <p>Пошаговый чек-лист — на <a href="{{ filament()->getUrl(filament()->getTenant()) }}">главной</a>, там же можно заполнить учёт примером и удалить его.</p>
+                @if ($checklistHidden)<p>{{ $this->showChecklistAction }}</p>@endif
+            @endunless
             <ol>
                 @if ($isAdmin)
                     <li><b>Профиль организации</b> (меню организации слева вверху): название и ИНН.</li>

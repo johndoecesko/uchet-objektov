@@ -2,6 +2,11 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\Organization;
+use App\Support\Demo\Demo;
+use App\Support\Onboarding;
+use Filament\Actions\Action;
+use Filament\Facades\Filament;
 use Filament\Pages\Page;
 use Illuminate\Support\Carbon;
 
@@ -31,6 +36,31 @@ class About extends Page
         return [
             'releases' => collect(config('releases'))->map(fn (array $r) => [...$r, 'date' => Carbon::parse($r['date'])->format('d.m.Y')]),
             'isAdmin' => (bool) auth()->user()?->isAdmin(),
+            'checklistHidden' => $this->checklistHidden(),
         ];
+    }
+
+    /** Чек-лист «Первые шаги» скрыт участником (а не потому, что всё сделано) */
+    private function checklistHidden(): bool
+    {
+        $org = Filament::getTenant();
+
+        return ! Demo::active() && $org instanceof Organization
+            && auth()->user()?->membershipIn($org)?->onboarding_hidden_at !== null;
+    }
+
+    /** «Показать чек-лист снова» — снять «Скрыть» у себя */
+    public function showChecklistAction(): Action
+    {
+        return Action::make('showChecklist')
+            ->label('Показать чек-лист снова')
+            ->icon('heroicon-o-rocket-launch')
+            ->color('gray')
+            ->visible(fn () => $this->checklistHidden())
+            ->action(function () {
+                Onboarding::hide(auth()->user(), Filament::getTenant(), hidden: false);
+
+                return redirect(Filament::getUrl(Filament::getTenant()));
+            });
     }
 }

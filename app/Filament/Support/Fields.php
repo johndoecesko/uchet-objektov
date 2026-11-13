@@ -28,6 +28,8 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TrashedFilter;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -227,6 +229,30 @@ class Fields
 
                 return $out;
             });
+    }
+
+    /**
+     * Пустая таблица: подсказка, что сюда вносится, и кнопки (каждая — со своей проверкой прав).
+     * Включены поиск или фильтр — другой текст: записи, скорее всего, есть, но не попали в выборку.
+     */
+    public static function emptyState(Table $table, string $heading, string $description, string $icon, array $actions = []): Table
+    {
+        return $table
+            ->emptyStateIcon($icon)
+            ->emptyStateHeading(fn (HasTable $livewire) => self::isFiltered($livewire) ? 'Ничего не найдено' : $heading)
+            ->emptyStateDescription(fn (HasTable $livewire) => self::isFiltered($livewire)
+                ? 'Измените поиск или сбросьте фильтры: записи могут быть в другом периоде, статусе или в корзине.'
+                : $description)
+            ->emptyStateActions($actions);
+    }
+
+    /** Пусто из-за поиска или фильтра (в том числе фильтра по умолчанию), а записи в разделе есть */
+    public static function isFiltered(HasTable $livewire): bool
+    {
+        $narrowed = filled($livewire->getTableSearch())
+            || collect($livewire->getTable()->getFilters())->contains(fn ($filter) => $filter->getIndicators() !== []);
+
+        return $narrowed && $livewire->getTable()->getQuery()->exists();
     }
 
     /** Корзина: фильтр «Удалённые» (виден только офису — прорабу удаление недоступно) */

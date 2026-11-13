@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Actions\CreateAction;
 use App\Enums\IncomeType;
 use App\Enums\PayMethod;
 use App\Filament\Resources\IncomeResource\Pages;
@@ -72,7 +73,9 @@ class IncomeResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table
+        return Fields::emptyState($table, 'Пока нет поступлений',
+            'Авансы и оплаты этапов от заказчика — видно, сколько получено и сколько заказчик ещё должен по каждому объекту.',
+            'heroicon-o-banknotes', [CreateAction::make()->label('Внести поступление')])
             ->columns(static::tableColumns())
             ->filters([Fields::periodFilter(), Fields::projectFilter(), SelectFilter::make('type')->label('Тип')->options(IncomeType::class), Fields::trashedFilter()])
             ->defaultSort('date', 'desc')

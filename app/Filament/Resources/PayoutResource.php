@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Actions\CreateAction;
 use App\Enums\PayMethod;
 use App\Filament\Resources\PayoutResource\Pages;
 use App\Filament\Support\Fields;
@@ -69,7 +70,9 @@ class PayoutResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table
+        return Fields::emptyState($table, 'Пока нет выплат',
+            'Зарплата наличными и на карту. Остаток к выплате по каждому сотруднику — в его карточке.',
+            'heroicon-o-wallet', [CreateAction::make()->label('Внести выплату')])
             ->columns(static::tableColumns())
             ->filters([Fields::periodFilter(), Fields::employeeFilter(), SelectFilter::make('method')->label('Способ')->options(PayMethod::class), Fields::trashedFilter()])
             ->defaultSort('date', 'desc')

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Actions\CreateAction;
 use App\Enums\AdvanceType;
 use App\Enums\PaymentSource;
 use App\Filament\Resources\EmployeeResource\Pages;
@@ -82,7 +83,9 @@ class EmployeeResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table
+        return Fields::emptyState($table, 'Пока нет сотрудников',
+            'Бригада и офис со ставкой за день. Сотрудника можно связать с участником учёта — тогда его чеки идут в подотчёт.',
+            'heroicon-o-user-group', [CreateAction::make()->label('Добавить сотрудника')])
             ->modifyQueryUsing(fn (Builder $query) => $query
                 ->withSum('workLogs', 'amount')
                 ->withSum('payouts', 'amount')
@@ -92,6 +95,8 @@ class EmployeeResource extends Resource
             ->columns([
                 TextColumn::make('name')->label('ФИО')->searchable()->sortable()
                     ->description(fn (Employee $r) => $r->position),
+                TextColumn::make('example')->label('')->badge()->color('warning')->placeholder('')
+                    ->state(fn (Employee $r) => $r->is_example ? 'Пример' : null),
                 TextColumn::make('phone')->label('Телефон')->toggleable(),
                 TextColumn::make('day_rate')->label('Ставка')->money('RUB', locale: 'ru')->alignEnd(),
                 TextColumn::make('debt')->label('Долг по зарплате')->alignEnd()

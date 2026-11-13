@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Actions\CreateAction;
 use App\Enums\ExpenseSource;
 use App\Enums\PaymentSource;
 use App\Filament\Resources\ExpenseResource\Pages;
@@ -112,7 +113,9 @@ class ExpenseResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table
+        return Fields::emptyState($table, 'Пока нет расходов',
+            'Материалы, субподряд, топливо, аренда — с фото чека. Прораб вносит свои расходы с телефона; ещё проще — прислать фото чека боту MAX (меню пользователя → «Подключить MAX»).',
+            'heroicon-o-receipt-percent', [CreateAction::make()->label('Внести расход')])
             ->columns(static::tableColumns())
             ->filters([...static::tableFilters(), Fields::trashedFilter()])
             ->defaultSort('date', 'desc')

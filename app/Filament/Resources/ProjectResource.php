@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Actions\ExampleActions;
+use Filament\Actions\CreateAction;
 use App\Enums\ProjectStatus;
 use App\Filament\Resources\ProjectResource\Pages;
 use App\Filament\Resources\ProjectResource\RelationManagers;
@@ -169,7 +171,9 @@ class ProjectResource extends Resource
 
     public static function table(Table $table): Table
     {
-        return $table
+        return Fields::emptyState($table, 'Пока нет объектов',
+            'Объект — это договор: заказчик, сумма, бюджет по статьям. Расходы, работы и оплаты вносятся в объект. Можно сначала заполнить примером и посмотреть, как считается прибыль.',
+            'heroicon-o-building-office-2', [CreateAction::make()->label('Добавить объект'), ExampleActions::fill()])
             ->modifyQueryUsing(fn (Builder $query) => $query
                 ->withSum('expenses', 'amount')
                 ->withSum('workLogs', 'amount')
@@ -178,6 +182,8 @@ class ProjectResource extends Resource
             ->columns([
                 TextColumn::make('name')->label('Объект')->searchable(['name', 'customer', 'customer_inn', 'address'])->sortable()->wrap()
                     ->description(fn (Project $r) => trim($r->customer.($r->customer_inn ? ' · ИНН '.$r->customer_inn : ''))),
+                TextColumn::make('example')->label('')->badge()->color('warning')->placeholder('')
+                    ->state(fn (Project $r) => $r->is_example ? 'Пример' : null),
                 TextColumn::make('status')->label('Статус')->badge()->sortable(),
                 TextColumn::make('contract_amount')->label('Договор')->money('RUB', locale: 'ru')->alignEnd()->sortable()
                     ->visible(fn () => Fields::isOffice()),

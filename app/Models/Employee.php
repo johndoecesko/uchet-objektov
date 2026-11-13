@@ -7,6 +7,7 @@ use App\Enums\PaymentSource;
 use App\Models\Concerns\BelongsToOrganization;
 use App\Models\Concerns\LogsChanges;
 use App\Support\OrganizationMismatch;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -21,7 +22,20 @@ class Employee extends Model
 
     protected function casts(): array
     {
-        return ['day_rate' => 'decimal:2', 'card_percent' => 'integer', 'is_active' => 'boolean'];
+        // is_example — не в $fillable: ставит только «Заполнить примером» (App\Support\Demo\ExampleData)
+        return ['day_rate' => 'decimal:2', 'card_percent' => 'integer', 'is_active' => 'boolean', 'is_example' => 'boolean'];
+    }
+
+    /** Сотрудники из «Заполнить примером» */
+    public function scopeExample(Builder $query): Builder
+    {
+        return $query->where($query->qualifyColumn('is_example'), true);
+    }
+
+    /** Свои сотрудники (без примера) */
+    public function scopeReal(Builder $query): Builder
+    {
+        return $query->where($query->qualifyColumn('is_example'), false);
     }
 
     /** Учётная запись сотрудника — только участник этой же организации */

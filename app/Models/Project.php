@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\ProjectStatus;
 use App\Models\Concerns\BelongsToOrganization;
 use App\Models\Concerns\LogsChanges;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
@@ -27,7 +28,20 @@ class Project extends Model
             'contract_date' => 'date',
             'start_date' => 'date',
             'end_date' => 'date',
+            'is_example' => 'boolean', // не в $fillable: ставит только «Заполнить примером» (App\Support\Demo\ExampleData)
         ];
+    }
+
+    /** Объекты из «Заполнить примером» */
+    public function scopeExample(Builder $query): Builder
+    {
+        return $query->where($query->qualifyColumn('is_example'), true);
+    }
+
+    /** Свои объекты (без примера) */
+    public function scopeReal(Builder $query): Builder
+    {
+        return $query->where($query->qualifyColumn('is_example'), false);
     }
 
     public function budgets(): HasMany

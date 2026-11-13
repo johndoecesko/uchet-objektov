@@ -11,6 +11,12 @@ class ViewWorkLog extends ViewRecord
 {
     protected static string $resource = WorkLogResource::class;
 
+    /** Свой заголовок: Filament склеил бы «Просмотр» с подписью модели в винительном падеже */
+    public function getTitle(): string
+    {
+        return 'Запись о работе';
+    }
+
     protected function getHeaderActions(): array
     {
         return [EditAction::make()];

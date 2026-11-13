@@ -11,6 +11,12 @@ class ViewExpense extends ViewRecord
 {
     protected static string $resource = ExpenseResource::class;
 
+    /** Свой заголовок: Filament склеил бы «Просмотр» с подписью модели в винительном падеже */
+    public function getTitle(): string
+    {
+        return 'Расход';
+    }
+
     protected function getHeaderActions(): array
     {
         return [EditAction::make()];

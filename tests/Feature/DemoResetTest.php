@@ -123,8 +123,8 @@ class DemoResetTest extends TestCase
         $this->artisan('app:demo-reset')->assertSuccessful();
 
         $this->useOrganization($this->demo);
-        // самый свежий расход в демо — топливо по школе 15 дней назад
-        $this->assertSame(now()->startOfDay()->subDays(15)->toDateString(), Carbon::parse(Expense::max('date'))->toDateString());
+        // самый свежий расход в демо — чек прораба 2 дня назад
+        $this->assertSame(now()->startOfDay()->subDays(2)->toDateString(), Carbon::parse(Expense::max('date'))->toDateString());
     }
 
     public function test_reset_refuses_when_real_user_is_member_of_demo(): void

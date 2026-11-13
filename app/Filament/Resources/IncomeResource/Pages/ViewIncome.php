@@ -11,6 +11,12 @@ class ViewIncome extends ViewRecord
 {
     protected static string $resource = IncomeResource::class;
 
+    /** Свой заголовок: Filament склеил бы «Просмотр» с подписью модели в винительном падеже */
+    public function getTitle(): string
+    {
+        return 'Поступление';
+    }
+
     protected function getHeaderActions(): array
     {
         return [EditAction::make()];

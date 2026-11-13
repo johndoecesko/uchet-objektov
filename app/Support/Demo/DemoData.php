@@ -80,8 +80,8 @@ class DemoData
         $p1 = $this->project('ЖК «Солнечный», корпус 2 — СОУЭ и АПС', 'ООО «Солнечный Девелопмент»', 3_200_000, 6, ProjectStatus::Active, 75, self::BIG_BUDGET);
         $this->expenses($p1, self::BIG_EXPENSES);
         // журнал своей бригады ведёт прораб
-        $this->actingAs($personas['foreman'], fn () => $this->workLogs($p1, array_slice($workers, 0, 4), 70, 28));
-        $this->incomes($p1, [[72, IncomeType::Advance, 1_280_000], [25, IncomeType::Stage, 800_000]]);
+        $this->actingAs($personas['foreman'], fn () => $this->workLogs($p1, array_slice($workers, 0, 4), 70, 3));
+        $this->incomes($p1, [[72, IncomeType::Advance, 1_280_000], [6, IncomeType::Stage, 800_000]]);
 
         // 2. Объект с перерасходом материалов — попадает в «Требует внимания».
         $p2 = $this->project('Школа № 12 — видеонаблюдение', 'МОУ «СОШ № 12»', 890_000, 6, ProjectStatus::Active, 40, [
@@ -92,7 +92,7 @@ class DemoData
             [21, 'Материалы и оборудование', 118_500, 'ООО «ВидеоСистемы»', 'Доп. камеры по просьбе заказчика'],
             [15, 'Транспорт и ГСМ', 9_800, 'АЗС', 'Топливо'],
         ]);
-        $this->workLogs($p2, [$workers[1], $workers[4]], 35, 18);
+        $this->workLogs($p2, [$workers[1], $workers[4]], 35, 4);
         $this->incomes($p2, [[39, IncomeType::Advance, 445_000]]);
 
         // 3. Завершён, заказчик не доплатил.
@@ -124,8 +124,8 @@ class DemoData
         Advance::create(['date' => self::ago(20), 'employee_id' => $foreman->id, 'type' => AdvanceType::Issue, 'amount' => 30_000, 'method' => PayMethod::Cash]);
         // чеки прораб вносит сам — они видны у него на главной в «Мои расходы за месяц»
         $this->actingAs($personas['foreman'], fn () => $this->expenses($p1, [
-            [18, 'Инструмент и расходники', 9_850, 'Строймаркет', 'Дюбели, анкеры, изолента', $foreman],
-            [16, 'Прочее', 7_500, 'Столовая «Обед»', 'Питание бригады', $foreman],
+            [4, 'Инструмент и расходники', 9_850, 'Строймаркет', 'Дюбели, анкеры, изолента', $foreman],
+            [2, 'Прочее', 7_500, 'Столовая «Обед»', 'Питание бригады', $foreman],
         ]));
         // этот чек прораб прислал через бота MAX
         Expense::where('created_by', $personas['foreman']->id)->where('supplier', 'Строймаркет')->update(['source' => 'max']);

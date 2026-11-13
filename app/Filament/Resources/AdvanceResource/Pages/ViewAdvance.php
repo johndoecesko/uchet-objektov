@@ -11,6 +11,12 @@ class ViewAdvance extends ViewRecord
 {
     protected static string $resource = AdvanceResource::class;
 
+    /** Свой заголовок: Filament склеил бы «Просмотр» с подписью модели в винительном падеже */
+    public function getTitle(): string
+    {
+        return 'Операция подотчёта';
+    }
+
     protected function getHeaderActions(): array
     {
         return [EditAction::make()];

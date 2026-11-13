@@ -11,6 +11,12 @@ class ViewPayout extends ViewRecord
 {
     protected static string $resource = PayoutResource::class;
 
+    /** Свой заголовок: Filament склеил бы «Просмотр» с подписью модели в винительном падеже */
+    public function getTitle(): string
+    {
+        return 'Выплата';
+    }
+
     protected function getHeaderActions(): array
     {
         return [EditAction::make()];

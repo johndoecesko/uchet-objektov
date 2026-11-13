@@ -47,4 +47,7 @@
             </div>
         @endif
     </x-filament::section>
+
+    {{-- окна подтверждения действий: у своего виджета (не таблицы) Filament их сам не выводит --}}
+    <x-filament-actions::modals />
 </x-filament-widgets::widget>

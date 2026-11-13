@@ -18,6 +18,14 @@ return [
     'default' => env('CACHE_STORE', 'database'),
 
     /*
+    | Блокировки планировщика (withoutOverlapping, schedule:run) — в файлах, а не в базе:
+    | на виртуальном хостинге запись в cache_locks изредка падала с «MySQL server has gone away».
+    | Ключ именно в конфиге: при закэшированной конфигурации (artisan optimize) ядро не видит
+    | SCHEDULE_CACHE_DRIVER из .env. Сервер один, так что файловые блокировки достаточны.
+    */
+    'schedule_store' => env('SCHEDULE_CACHE_STORE', 'file'),
+
+    /*
     |--------------------------------------------------------------------------
     | Cache Stores
     |--------------------------------------------------------------------------

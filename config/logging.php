@@ -62,6 +62,7 @@ return [
             'driver' => 'single',
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
+            'permission' => 0600, // логи — только владельцу (в них бывают адреса почты); решение 2026-11-13
             'replace_placeholders' => true,
         ],
 
@@ -69,6 +70,7 @@ return [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),
             'level' => env('LOG_LEVEL', 'debug'),
+            'permission' => 0600, // логи — только владельцу (в них бывают адреса почты); решение 2026-11-13
             'days' => env('LOG_DAILY_DAYS', 14),
             'replace_placeholders' => true,
         ],
